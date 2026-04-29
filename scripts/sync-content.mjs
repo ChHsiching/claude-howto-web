@@ -141,12 +141,12 @@ function generateSidebarItems(dir, basePath = '') {
           text: makeTitle(sub.name),
           ...(hasIndex && { link: `/${sub.rel}/` }),
           items: subItems,
-          collapsed: true,
+          collapsed: false,
         })
       }
     }
     if (moduleSubs.length > 0) {
-      items.push({ text: 'General', items: generalItems, collapsed: true })
+      items.push({ text: 'General', items: generalItems, collapsed: false })
     } else {
       items.push(...generalItems)
     }
