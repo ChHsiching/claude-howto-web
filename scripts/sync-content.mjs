@@ -168,9 +168,9 @@ function generateSidebarItems(dir, basePath = '', langCode = 'en') {
       }
     }
     if (moduleSubs.length > 0) {
-      items.push({ text: 'General', items: generalItems, collapsed: false })
+      items.unshift({ text: 'General', items: generalItems, collapsed: false })
     } else {
-      items.push(...generalItems)
+      items.unshift(...generalItems)
     }
   }
 
