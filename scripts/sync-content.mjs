@@ -17,6 +17,12 @@ const LANGUAGES = [
 const EXCLUDE_DIRS = new Set(['.git', 'node_modules', 'local-progress', '.github'])
 const EXCLUDE_FILES = new Set(['coverage.xml', 'INDEX.md'])
 const SKIP_FOR_ROOT = new Set(['vi', 'zh', 'uk'])
+
+const EXCLUDE_SIDEBAR_FILES = new Set([
+  'CHANGELOG.md', 'CONTRIBUTING.md', 'CODE_OF_CONDUCT.md',
+  'SECURITY.md', 'STYLE_GUIDE.md', 'CLAUDE.md',
+])
+const EXCLUDE_SIDEBAR_DIRS = new Set(['docs', 'prompts', 'scripts', 'resources'])
 const PROTECTED_FILES = new Set(['index.md', 'README.md'])
 
 function listFiles(dir, baseDir = dir, prefix = '') {
@@ -112,6 +118,8 @@ function generateSidebarItems(dir, basePath = '', langCode = 'en') {
   for (const entry of entries) {
     if (entry.startsWith('.')) continue
     if (langCode === 'en' && isTopLevel && SKIP_FOR_ROOT.has(entry)) continue
+    if (isTopLevel && EXCLUDE_SIDEBAR_FILES.has(entry)) continue
+    if (isTopLevel && EXCLUDE_SIDEBAR_DIRS.has(entry)) continue
     const fullPath = join(dir, entry)
     const relPath = basePath ? `${basePath}/${entry}` : entry
 
@@ -147,14 +155,23 @@ function generateSidebarItems(dir, basePath = '', langCode = 'en') {
   }
 
   if (mdFiles.length > 0 || otherSubs.length > 0) {
-    const generalItems = []
+    const readmeItems = []
+    const otherMdItems = []
+
     for (const f of mdFiles) {
       if (isTopLevel && f.name === 'index.md') continue
-      generalItems.push({
+      const item = {
         text: sidebarTitle(f, langCode),
         link: `/${f.rel.replace(/\.md$/, '')}`,
-      })
+      }
+      if (f.name === 'README.md') {
+        readmeItems.push(item)
+      } else {
+        otherMdItems.push(item)
+      }
     }
+
+    const generalItems = [...readmeItems, ...otherMdItems]
     for (const sub of otherSubs) {
       const subItems = generateSidebarItems(sub.path, sub.rel, langCode)
       if (subItems.length > 0) {
