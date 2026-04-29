@@ -11,7 +11,7 @@ hero:
   actions:
     - theme: brand
       text: Start Learning
-      link: /01-slash-commands/
+      link: /README
     - theme: alt
       text: Learning Roadmap
       link: /LEARNING-ROADMAP

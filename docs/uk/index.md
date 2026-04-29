@@ -11,7 +11,7 @@ hero:
   actions:
     - theme: brand
       text: Почати навчання
-      link: /uk/01-slash-commands/
+      link: /uk/README
     - theme: alt
       text: Навчальний план
       link: /uk/LEARNING-ROADMAP
