@@ -1,10 +1,22 @@
 /* Logo: fill sidebar width */
 .VPSidebar .VPImage {
   width: 100%;
+  max-width: 100%;
 }
 
 .VPSidebar .VPImage img {
-  width: 100%;
-  height: auto;
+  width: 100% !important;
+  height: auto !important;
   object-fit: contain;
+}
+
+/* Increase nav bar logo size */
+.VPNavBar .VPImage {
+  width: auto;
+  height: 32px;
+}
+
+.VPNavBar .VPImage img {
+  height: 32px !important;
+  width: auto !important;
 }

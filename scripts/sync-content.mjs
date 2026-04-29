@@ -37,6 +37,12 @@ function listFiles(dir, baseDir = dir, prefix = '') {
   return files
 }
 
+function isCustomHomepage(filePath) {
+  if (!existsSync(filePath)) return false
+  const content = readFileSync(filePath, 'utf-8')
+  return content.includes('layout: home')
+}
+
 function clearTarget(targetDir, isRoot = false) {
   if (!existsSync(targetDir)) {
     mkdirSync(targetDir, { recursive: true })
@@ -44,7 +50,12 @@ function clearTarget(targetDir, isRoot = false) {
   }
 
   for (const entry of readdirSync(targetDir)) {
-    if (isRoot && (entry === '.vitepress' || PROTECTED_FILES.has(entry))) continue
+    if (isRoot && (entry === '.vitepress' || SKIP_FOR_ROOT.has(entry) || PROTECTED_FILES.has(entry))) continue
+    if (!isRoot && (entry === '.vitepress')) continue
+    if (!isRoot && PROTECTED_FILES.has(entry)) {
+      const fullPath = join(targetDir, entry)
+      if (isCustomHomepage(fullPath)) continue
+    }
     const fullPath = join(targetDir, entry)
     rmSync(fullPath, { recursive: true, force: true })
   }
@@ -70,6 +81,9 @@ function syncLanguage(lang) {
       const topDir = file.split('/')[0]
       if (SKIP_FOR_ROOT.has(topDir)) continue
     }
+
+    // Skip top-level index.md — our custom homepage
+    if (!file.includes('/') && file === 'index.md') continue
 
     const src = join(source, file)
     const dest = join(target, file)
@@ -254,6 +268,8 @@ function renameReadmeToIndex() {
     const mdFiles = listMdFiles(lang.target)
     for (const file of mdFiles) {
       if (basename(file) !== 'README.md') continue
+      // Skip top-level README.md — our custom homepage takes that slot
+      if (dirname(file) === '.') continue
       const oldPath = join(lang.target, file)
       const newPath = join(lang.target, dirname(file), 'index.md')
       if (!existsSync(newPath)) {
