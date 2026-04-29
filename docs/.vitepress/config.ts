@@ -86,7 +86,7 @@ export default defineConfig({
     },
   },
   themeConfig: {
-    logo: '/claude-howto-logo.svg',
+    logo: { light: '/assets/logo/logo-full.svg', dark: '/assets/logo/logo-white.svg' },
     siteTitle: false,
     search: {
       provider: 'local',

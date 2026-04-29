@@ -4,6 +4,9 @@ hero:
   name: "Claude How-To"
   text: "Master Claude Code in a Weekend"
   tagline: From typing claude to orchestrating agents, hooks, skills and MCP servers
+  image:
+    src: /assets/logo/logo-chhsich.svg
+    alt: Claude How-To
   actions:
     - theme: brand
       text: Start Learning

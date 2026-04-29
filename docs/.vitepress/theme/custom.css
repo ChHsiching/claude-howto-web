@@ -1,0 +1,10 @@
+/* Logo: fill sidebar width */
+.VPSidebar .VPImage {
+  width: 100%;
+}
+
+.VPSidebar .VPImage img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}

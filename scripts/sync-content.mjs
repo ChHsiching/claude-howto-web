@@ -85,7 +85,7 @@ function syncLanguage(lang) {
 
 const MODULE_DIRS = /^(\d+-(?:slash-commands|memory|skills|subagents|mcp|hooks|plugins|checkpoints|advanced-features|cli))/
 
-function generateSidebarItems(dir, basePath = '') {
+function generateSidebarItems(dir, basePath = '', langCode = 'en') {
   if (!existsSync(dir)) return []
 
   const items = []
@@ -118,7 +118,7 @@ function generateSidebarItems(dir, basePath = '') {
   }
 
   for (const sub of moduleSubs) {
-    const subItems = generateSidebarItems(sub.path, sub.rel)
+    const subItems = generateSidebarItems(sub.path, sub.rel, langCode)
     if (subItems.length > 0) {
       const hasIndex = existsSync(join(sub.path, 'index.md'))
       const link = hasIndex ? `/${sub.rel}/` : undefined
@@ -129,16 +129,16 @@ function generateSidebarItems(dir, basePath = '') {
     const generalItems = []
     for (const f of mdFiles) {
       generalItems.push({
-        text: makeTitle(f.name.replace(/\.md$/, '')),
+        text: sidebarTitle(f, langCode),
         link: `/${f.rel.replace(/\.md$/, '')}`,
       })
     }
     for (const sub of otherSubs) {
-      const subItems = generateSidebarItems(sub.path, sub.rel)
+      const subItems = generateSidebarItems(sub.path, sub.rel, langCode)
       if (subItems.length > 0) {
         const hasIndex = existsSync(join(sub.path, 'index.md'))
         generalItems.push({
-          text: makeTitle(sub.name),
+          text: sidebarGroupTitle(sub, langCode),
           ...(hasIndex && { link: `/${sub.rel}/` }),
           items: subItems,
           collapsed: false,
@@ -168,6 +168,27 @@ const MODULE_TITLES = {
   '10-cli': 'CLI Reference',
 }
 
+function extractTitle(filePath) {
+  if (!existsSync(filePath)) return null
+  const content = readFileSync(filePath, 'utf-8')
+  const match = content.match(/^#\s+(.+)$/m)
+  return match ? match[1].trim() : null
+}
+
+function sidebarTitle(file, langCode) {
+  if (langCode === 'en') return makeTitle(file.name.replace(/\.md$/, ''))
+  const fullFilePath = join(DOCS, file.rel)
+  const title = extractTitle(fullFilePath)
+  return title || makeTitle(file.name.replace(/\.md$/, ''))
+}
+
+function sidebarGroupTitle(sub, langCode) {
+  if (langCode === 'en' || MODULE_TITLES[sub.name]) return makeTitle(sub.name)
+  const indexPath = join(DOCS, sub.rel, 'index.md')
+  const title = extractTitle(indexPath)
+  return title || makeTitle(sub.name)
+}
+
 function makeTitle(name) {
   if (MODULE_TITLES[name]) return MODULE_TITLES[name]
   return name.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
@@ -179,7 +200,7 @@ function generateSidebarConfig() {
   for (const lang of LANGUAGES) {
     const targetDir = lang.code === 'en' ? DOCS : join(DOCS, lang.code)
     const prefix = lang.code === 'en' ? '' : `${lang.code}`
-    const items = generateSidebarItems(targetDir, prefix)
+    const items = generateSidebarItems(targetDir, prefix, lang.code)
     if (items.length > 0) {
       sidebar[`/${lang.code === 'en' ? '' : lang.code + '/'}`] = items
     }
