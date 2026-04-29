@@ -1,3 +1,5 @@
+🌐 **Language / 语言:** [English](README.md) | [中文](README.zh-CN.md)
+
 # claude-howto-web
 
 A VitePress-powered static site that faithfully presents the content of [luongnv89/claude-howto](https://github.com/luongnv89/claude-howto) in 4 languages.
