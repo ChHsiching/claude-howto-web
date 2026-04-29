@@ -9,6 +9,10 @@ const docsRoot = resolve(import.meta.dirname, '..')
 
 export default defineConfig({
   base,
+  head: [
+    ['link', { rel: 'icon', href: '/favicon-light.png', media: '(prefers-color-scheme: light)' }],
+    ['link', { rel: 'icon', href: '/favicon-dark.png', media: '(prefers-color-scheme: dark)' }],
+  ],
   title: 'Claude How-To',
   description: 'Master Claude Code in a Weekend',
   cleanUrls: true,
@@ -34,6 +38,10 @@ export default defineConfig({
   markdown: {
     image: {
       lazyLoading: true,
+    },
+    theme: {
+      light: 'vitesse-light',
+      dark: 'vitesse-dark',
     },
     config(md) {
       md.use(taskLists)
