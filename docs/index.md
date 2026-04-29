@@ -5,7 +5,8 @@ hero:
   text: "Master Claude Code in a Weekend"
   tagline: From typing claude to orchestrating agents, hooks, skills and MCP servers
   image:
-    src: /assets/logo/logo-chhsich-transparent.png
+    light: /assets/logo/logo-light.webp
+    dark: /assets/logo/logo-dark.webp
     alt: Claude How-To
   actions:
     - theme: brand

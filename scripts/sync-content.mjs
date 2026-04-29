@@ -104,12 +104,14 @@ function generateSidebarItems(dir, basePath = '', langCode = 'en') {
 
   const items = []
   const entries = readdirSync(dir).sort()
+  const isTopLevel = langCode === 'en' ? basePath === '' : basePath === langCode
 
   const mdFiles = []
   const subDirs = []
 
   for (const entry of entries) {
     if (entry.startsWith('.')) continue
+    if (langCode === 'en' && isTopLevel && SKIP_FOR_ROOT.has(entry)) continue
     const fullPath = join(dir, entry)
     const relPath = basePath ? `${basePath}/${entry}` : entry
 
@@ -135,13 +137,19 @@ function generateSidebarItems(dir, basePath = '', langCode = 'en') {
     const subItems = generateSidebarItems(sub.path, sub.rel, langCode)
     if (subItems.length > 0) {
       const hasIndex = existsSync(join(sub.path, 'index.md'))
-      const link = hasIndex ? `/${sub.rel}/` : undefined
+      items.push({
+        text: sidebarGroupTitle(sub, langCode),
+        ...(hasIndex && { link: `/${sub.rel}/` }),
+        items: subItems,
+        collapsed: false,
+      })
     }
   }
 
   if (mdFiles.length > 0 || otherSubs.length > 0) {
     const generalItems = []
     for (const f of mdFiles) {
+      if (isTopLevel && f.name === 'index.md') continue
       generalItems.push({
         text: sidebarTitle(f, langCode),
         link: `/${f.rel.replace(/\.md$/, '')}`,
@@ -337,6 +345,24 @@ renameReadmeToIndex()
 for (const lang of LANGUAGES) {
   rewriteImagePaths(lang)
 }
+
+const CUSTOM_LOGOS = [
+  { src: resolve(ROOT, 'assets/logo/logo-light.webp'), dest: resolve(DOCS, 'assets/logo/logo-light.webp') },
+  { src: resolve(ROOT, 'assets/logo/logo-dark.webp'), dest: resolve(DOCS, 'assets/logo/logo-dark.webp') },
+]
+
+function copyCustomLogos() {
+  let copied = 0
+  for (const { src, dest } of CUSTOM_LOGOS) {
+    if (!existsSync(src)) continue
+    mkdirSync(dirname(dest), { recursive: true })
+    cpSync(src, dest)
+    copied++
+  }
+  if (copied > 0) console.log(`  Copied ${copied} custom logos to docs/assets/logo/`)
+}
+
+copyCustomLogos()
 console.log('\n=== Generating Sidebar ===')
 generateSidebarConfig()
 console.log('\nSync complete.')
