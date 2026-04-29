@@ -132,13 +132,11 @@
 
 /* Logo outline for visibility against glow */
 .VPHero .VPImage {
-  filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.5))
-    drop-shadow(0 0 3px rgba(0, 0, 0, 0.3));
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.15));
 }
 
 .dark .VPHero .VPImage {
-  filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.3))
-    drop-shadow(0 0 3px rgba(255, 255, 255, 0.15));
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3));
 }
 
 /* ── Headings: Serif display (EB Garamond as Copernicus substitute) ── */
