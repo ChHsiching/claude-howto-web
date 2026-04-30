@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitepress'
 import { resolve } from 'node:path'
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import taskLists from 'markdown-it-task-lists'
 import sidebar from './sidebar.json'
 
@@ -20,6 +20,12 @@ export default defineConfig({
   ignoreDeadLinks: true,
   sitemap: {
     hostname: `https://chhsiching.github.io${base}`,
+  },
+  transformPageData(pageData) {
+    const absPath = resolve(docsRoot, pageData.filePath)
+    if (existsSync(absPath)) {
+      pageData.frontmatter.markdownSrc = readFileSync(absPath, 'utf-8')
+    }
   },
   vite: {
     plugins: [
@@ -98,6 +104,10 @@ export default defineConfig({
     siteTitle: 'Claude How-To',
     search: {
       provider: 'local',
+    },
+    outline: {
+      level: [2, 4],
+      label: 'On this page',
     },
     socialLinks: [
       { icon: 'github', link: 'https://github.com/luongnv89/claude-howto' },

@@ -82,20 +82,25 @@
   --vp-code-color: #e8956e;
 }
 
-/* ── Dark mode: Soften body text (not pure white) ──
-   DESIGN.md: body text should be warm gray, not #faf9f5
-   Headings keep bright --vp-c-text-1 via heading selectors.
-   Blockquote text stays softer via its own rule. */
+/* ── Dark mode text hierarchy (per DESIGN.md + Claude Code Docs) ──
+   Body:     #9e9e9e (verified via color picker on code.claude.com/docs)
+   Bold:     #faf9f5 (DESIGN.md on-dark — emphasis stays bright)
+   Blockquote: #6c6a64 (DESIGN.md muted — darker than body)
+   Headings: #faf9f5 via --vp-c-text-1 (unchanged) */
 .dark .vp-doc p,
 .dark .vp-doc li,
 .dark .vp-doc td,
 .dark .vp-doc th {
-  color: #dedede;
+  color: #9e9e9e;
+}
+
+.dark .vp-doc strong {
+  color: #faf9f5;
 }
 
 .dark .vp-doc blockquote p,
 .dark .vp-doc blockquote li {
-  color: #9e9e9e;
+  color: #6c6a64;
 }
 
 /* ── Home hero: Amber+teal glow (contrasts coral logo) ── */
@@ -158,10 +163,21 @@
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3));
 }
 
+/* ── Nav bar title: Serif display (logo text only) ── */
+.VPNavBarTitle .title {
+  font-family: 'EB Garamond', 'Tiempos Headline', Georgia, serif;
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
 /* ── Headings: Serif display ── */
 .vp-doc h1,
 .vp-doc h2,
-.vp-doc h3 {
+.vp-doc h3,
+.vp-doc h4,
+.vp-doc h5,
+.vp-doc h6 {
   font-family: 'EB Garamond', 'Tiempos Headline', Georgia, serif;
   font-weight: 500;
   letter-spacing: -0.02em;
@@ -184,6 +200,32 @@
   width: 100% !important;
   height: auto !important;
   object-fit: contain;
+}
+
+/* ── Task lists: hide bullet on checkbox items ── */
+.vp-doc .task-list-item {
+  list-style: none;
+}
+
+/* ── Doc logo: theme-aware via CSS ── */
+.vp-doc .doc-logo-dark {
+  display: none;
+}
+html.dark .vp-doc .doc-logo-light {
+  display: none;
+}
+html.dark .vp-doc .doc-logo-dark {
+  display: inline;
+}
+
+/* ── Badges: inline images inside links ── */
+.vp-doc p > a > img {
+  display: inline;
+  vertical-align: middle;
+  width: auto !important;
+  max-width: none;
+  height: 20px;
+  margin: 0 4px;
 }
 
 /* ── Nav bar: Compact logo + text ── */

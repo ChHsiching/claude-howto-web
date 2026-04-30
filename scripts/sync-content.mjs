@@ -363,6 +363,40 @@ for (const lang of LANGUAGES) {
   rewriteImagePaths(lang)
 }
 
+function replaceLogoImages() {
+  const logoFull = resolve(UPSTREAM, 'assets/logo/logo-full.svg')
+  const logoWhite = resolve(UPSTREAM, 'assets/logo/logo-white.svg')
+  if (!existsSync(logoFull) || !existsSync(logoWhite)) {
+    console.warn('  Transparent logos not found, skipping replacement')
+    return
+  }
+
+  const logoDir = resolve(DOCS, 'assets/logo')
+  mkdirSync(logoDir, { recursive: true })
+  cpSync(logoFull, resolve(logoDir, 'logo-full.svg'))
+  cpSync(logoWhite, resolve(logoDir, 'logo-white.svg'))
+
+  const LOGO_RE = /resources\/logos\/claude-howto-logo/
+  let replaced = 0
+
+  for (const lang of LANGUAGES) {
+    const mdFiles = listMdFiles(lang.target)
+    for (const file of mdFiles) {
+      const filePath = join(lang.target, file)
+      let content = readFileSync(filePath, 'utf-8')
+      if (!LOGO_RE.test(content)) continue
+
+      content = content.replace(
+        /<picture>\s*<source[^>]*claude-howto-logo[^>]*>\s*<img[^>]*claude-howto-logo[^>]*>\s*<\/picture>/g,
+        '<img class="doc-logo-light" alt="Claude How To" src="/assets/logo/logo-full.svg"><img class="doc-logo-dark" alt="Claude How To" src="/assets/logo/logo-white.svg">'
+      )
+      writeFileSync(filePath, content)
+      replaced++
+    }
+  }
+  if (replaced > 0) console.log(`  Replaced logo in ${replaced} files with transparent versions`)
+}
+
 const CUSTOM_LOGOS = [
   { src: resolve(ROOT, 'assets/logo/logo-light.webp'), dest: resolve(DOCS, 'assets/logo/logo-light.webp') },
   { src: resolve(ROOT, 'assets/logo/logo-dark.webp'), dest: resolve(DOCS, 'assets/logo/logo-dark.webp') },
@@ -380,6 +414,7 @@ function copyCustomLogos() {
 }
 
 copyCustomLogos()
+replaceLogoImages()
 console.log('\n=== Generating Sidebar ===')
 generateSidebarConfig()
 console.log('\nSync complete.')
