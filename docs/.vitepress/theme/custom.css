@@ -1,9 +1,79 @@
-/* Hero glow — oversized bg circle for opaque logos */
+/* ── Claude Design Theme ──
+   Based on DESIGN.md from npx getdesign@latest add claude
+   Warm cream canvas + coral brand + dark navy surfaces
+*/
+
+/* ── Fonts ── */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=JetBrains+Mono:wght@400&display=swap');
+
 :root {
+  --vp-font-family-base: 'Inter', ui-sans-serif, system-ui, sans-serif,
+    'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --vp-font-family-mono: 'JetBrains Mono', ui-monospace, 'Menlo', 'Monaco',
+    'Consolas', 'Liberation Mono', 'Courier New', monospace;
+}
+
+/* ── Light mode: Cream canvas ── */
+:root {
+  --vp-c-bg: #faf9f5;
+  --vp-c-bg-alt: #f5f0e8;
+  --vp-c-bg-elv: #faf9f5;
+  --vp-c-bg-soft: #efe9de;
+
+  --vp-c-text-1: #141413;
+  --vp-c-text-2: #3d3d3a;
+  --vp-c-text-3: #6c6a64;
+
+  --vp-c-border: #e6dfd8;
+  --vp-c-divider: #ebe6df;
+  --vp-c-gutter: #ebe6df;
+
+  --vp-c-gray-1: #e6dfd8;
+  --vp-c-gray-2: #ebe6df;
+  --vp-c-gray-3: #f5f0e8;
+  --vp-c-gray-soft: rgba(110, 107, 100, 0.14);
+
+  /* Brand: Coral */
+  --vp-c-brand-1: #cc785c;
+  --vp-c-brand-2: #d4896e;
+  --vp-c-brand-3: #cc785c;
+  --vp-c-brand-soft: rgba(204, 120, 92, 0.14);
+}
+
+/* ── Dark mode: Dark navy surfaces ── */
+.dark {
+  --vp-c-bg: #181715;
+  --vp-c-bg-alt: #1f1e1b;
+  --vp-c-bg-elv: #252320;
+  --vp-c-bg-soft: #252320;
+
+  --vp-c-text-1: #faf9f5;
+  --vp-c-text-2: #a09d96;
+  --vp-c-text-3: #6c6a64;
+
+  --vp-c-border: #3a3835;
+  --vp-c-divider: #2e2c29;
+  --vp-c-gutter: #000000;
+
+  --vp-c-gray-1: #4a4743;
+  --vp-c-gray-2: #3a3835;
+  --vp-c-gray-3: #2e2c29;
+  --vp-c-gray-soft: rgba(160, 157, 150, 0.16);
+
+  --vp-c-brand-1: #e8956e;
+  --vp-c-brand-2: #d4896e;
+  --vp-c-brand-3: #e8956e;
+  --vp-c-brand-soft: rgba(232, 149, 110, 0.16);
+}
+
+/* ── Home hero: Coral glow matching brand ── */
+:root {
+  --vp-home-hero-name-color: #cc785c;
+  --vp-home-hero-name-background: transparent;
   --vp-home-hero-image-background-image: linear-gradient(
     -45deg,
-    #bd34fe 50%,
-    #47caff 50%
+    #cc785c 50%,
+    #e8a55a 50%
   );
   --vp-home-hero-image-filter: blur(72px);
 }
@@ -20,7 +90,7 @@
   }
 }
 
-/* Make image-bg larger than image-src so glow peeks around the logo */
+/* Oversized glow circle for opaque logos */
 .VPHero .image-bg {
   width: 256px !important;
   height: 256px !important;
@@ -41,10 +111,18 @@
 }
 
 .VPHero .VPImage {
-  filter: drop-shadow(0 0 24px rgba(189, 52, 254, 0.35));
+  filter: drop-shadow(0 0 24px rgba(204, 120, 92, 0.35));
 }
 
-/* Sidebar: logo fills width */
+/* ── Headings: Serif display ── */
+.vp-doc h1,
+.vp-doc h2 {
+  font-family: 'Cormorant Garamond', 'Tiempos Headline', Georgia, serif;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+/* ── Sidebar: Logo fills width ── */
 .VPSidebar .VPImage {
   width: 100%;
   max-width: 100%;
@@ -56,7 +134,7 @@
   object-fit: contain;
 }
 
-/* Nav bar: compact logo + text */
+/* ── Nav bar: Compact logo + text ── */
 .VPNavBar .VPImage {
   width: auto;
   height: 28px;
@@ -65,4 +143,10 @@
 .VPNavBar .VPImage img {
   height: 28px !important;
   width: auto !important;
+}
+
+/* ── Code blocks: Dark surface ── */
+:root {
+  --vp-code-block-bg: #181715;
+  --vp-code-block-divider-color: #2e2c29;
 }
