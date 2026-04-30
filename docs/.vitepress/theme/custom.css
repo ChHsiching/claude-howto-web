@@ -1,10 +1,10 @@
 /* ── Claude Design Theme ──
-   Based on DESIGN.md from npx getdesign@latest add claude
+   Based on DESIGN.md (npx getdesign@latest add claude)
    Warm cream canvas + coral brand + dark navy surfaces
 */
 
 /* ── Fonts ── */
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=JetBrains+Mono:wght@400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500&family=JetBrains+Mono:wght@400&display=swap');
 
 :root {
   --vp-font-family-base: 'Inter', ui-sans-serif, system-ui, sans-serif,
@@ -38,6 +38,12 @@
   --vp-c-brand-2: #d4896e;
   --vp-c-brand-3: #cc785c;
   --vp-c-brand-soft: rgba(204, 120, 92, 0.14);
+
+  /* Code: warm cream background */
+  --vp-code-block-bg: #f5f0e8;
+  --vp-code-block-divider-color: #e6dfd8;
+  --vp-code-bg: rgba(204, 120, 92, 0.08);
+  --vp-code-color: #a9583e;
 }
 
 /* ── Dark mode: Dark navy surfaces ── */
@@ -47,6 +53,10 @@
   --vp-c-bg-elv: #252320;
   --vp-c-bg-soft: #252320;
 
+  /* Text hierarchy per DESIGN.md:
+     on-dark (#faf9f5)    → headings, nav, emphasis
+     on-dark-soft (#a09d96) → secondary, muted
+     muted (#6c6a64)       → subtle, caret */
   --vp-c-text-1: #faf9f5;
   --vp-c-text-2: #a09d96;
   --vp-c-text-3: #6c6a64;
@@ -64,18 +74,48 @@
   --vp-c-brand-2: #d4896e;
   --vp-c-brand-3: #e8956e;
   --vp-c-brand-soft: rgba(232, 149, 110, 0.16);
+
+  /* Code: dark surface */
+  --vp-code-block-bg: #1f1e1b;
+  --vp-code-block-divider-color: #2e2c29;
+  --vp-code-bg: rgba(232, 149, 110, 0.12);
+  --vp-code-color: #e8956e;
 }
 
-/* ── Home hero: Coral glow matching brand ── */
+/* ── Dark mode: Soften body text (not pure white) ──
+   DESIGN.md: body text should be warm gray, not #faf9f5
+   Headings keep bright --vp-c-text-1 via heading selectors.
+   Blockquote text stays softer via its own rule. */
+.dark .vp-doc p,
+.dark .vp-doc li,
+.dark .vp-doc td,
+.dark .vp-doc th {
+  color: #c8c5be;
+}
+
+.dark .vp-doc blockquote p,
+.dark .vp-doc blockquote li {
+  color: #a09d96;
+}
+
+/* ── Home hero: Amber+teal glow (contrasts coral logo) ── */
 :root {
   --vp-home-hero-name-color: #cc785c;
   --vp-home-hero-name-background: transparent;
   --vp-home-hero-image-background-image: linear-gradient(
     -45deg,
-    #cc785c 50%,
-    #e8a55a 50%
+    #e8a55a 50%,
+    #5db8a6 50%
   );
   --vp-home-hero-image-filter: blur(72px);
+}
+
+.dark {
+  --vp-home-hero-image-background-image: linear-gradient(
+    -45deg,
+    #e8a55a 50%,
+    #5db8a6 50%
+  );
 }
 
 @media (min-width: 640px) {
@@ -111,15 +151,27 @@
 }
 
 .VPHero .VPImage {
-  filter: drop-shadow(0 0 24px rgba(204, 120, 92, 0.35));
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.15));
+}
+
+.dark .VPHero .VPImage {
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3));
 }
 
 /* ── Headings: Serif display ── */
 .vp-doc h1,
-.vp-doc h2 {
-  font-family: 'Cormorant Garamond', 'Tiempos Headline', Georgia, serif;
+.vp-doc h2,
+.vp-doc h3 {
+  font-family: 'EB Garamond', 'Tiempos Headline', Georgia, serif;
   font-weight: 500;
   letter-spacing: -0.02em;
+}
+
+/* ── Chinese font overrides ── */
+:root:where(:lang(zh)) {
+  --vp-font-family-base:
+    'Punctuation SC', 'Inter', ui-sans-serif, system-ui, sans-serif,
+    'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
 /* ── Sidebar: Logo fills width ── */
@@ -143,10 +195,4 @@
 .VPNavBar .VPImage img {
   height: 28px !important;
   width: auto !important;
-}
-
-/* ── Code blocks: Dark surface ── */
-:root {
-  --vp-code-block-bg: #181715;
-  --vp-code-block-divider-color: #2e2c29;
 }

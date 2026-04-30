@@ -56,7 +56,7 @@ function clearTarget(targetDir, isRoot = false) {
   }
 
   for (const entry of readdirSync(targetDir)) {
-    if (isRoot && (entry === '.vitepress' || SKIP_FOR_ROOT.has(entry) || PROTECTED_FILES.has(entry))) continue
+    if (isRoot && (entry === '.vitepress' || entry === 'public' || SKIP_FOR_ROOT.has(entry) || PROTECTED_FILES.has(entry))) continue
     if (!isRoot && (entry === '.vitepress')) continue
     if (!isRoot && PROTECTED_FILES.has(entry)) {
       const fullPath = join(targetDir, entry)
