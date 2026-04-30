@@ -207,6 +207,16 @@
   list-style: none;
 }
 
+/* ── Badges: inline images inside links ── */
+.vp-doc p > a > img {
+  display: inline;
+  vertical-align: middle;
+  width: auto !important;
+  max-width: none;
+  height: 20px;
+  margin: 0 4px;
+}
+
 /* ── Nav bar: Compact logo + text ── */
 .VPNavBar .VPImage {
   width: auto;
