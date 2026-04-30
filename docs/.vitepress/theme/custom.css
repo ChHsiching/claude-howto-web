@@ -90,12 +90,12 @@
 .dark .vp-doc li,
 .dark .vp-doc td,
 .dark .vp-doc th {
-  color: #c8c5be;
+  color: #dedede;
 }
 
 .dark .vp-doc blockquote p,
 .dark .vp-doc blockquote li {
-  color: #a09d96;
+  color: #9e9e9e;
 }
 
 /* ── Home hero: Amber+teal glow (contrasts coral logo) ── */
