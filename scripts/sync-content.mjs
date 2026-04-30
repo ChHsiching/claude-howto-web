@@ -37,6 +37,12 @@ function listFiles(dir, baseDir = dir, prefix = '') {
   return files
 }
 
+function isCustomHomepage(filePath) {
+  if (!existsSync(filePath)) return false
+  const content = readFileSync(filePath, 'utf-8')
+  return content.includes('layout: home')
+}
+
 function clearTarget(targetDir, isRoot = false) {
   if (!existsSync(targetDir)) {
     mkdirSync(targetDir, { recursive: true })
@@ -44,7 +50,12 @@ function clearTarget(targetDir, isRoot = false) {
   }
 
   for (const entry of readdirSync(targetDir)) {
-    if (isRoot && (entry === '.vitepress' || PROTECTED_FILES.has(entry))) continue
+    if (isRoot && (entry === '.vitepress' || SKIP_FOR_ROOT.has(entry) || PROTECTED_FILES.has(entry))) continue
+    if (!isRoot && (entry === '.vitepress')) continue
+    if (!isRoot && PROTECTED_FILES.has(entry)) {
+      const fullPath = join(targetDir, entry)
+      if (isCustomHomepage(fullPath)) continue
+    }
     const fullPath = join(targetDir, entry)
     rmSync(fullPath, { recursive: true, force: true })
   }
@@ -71,6 +82,9 @@ function syncLanguage(lang) {
       if (SKIP_FOR_ROOT.has(topDir)) continue
     }
 
+    // Skip top-level index.md — our custom homepage
+    if (!file.includes('/') && file === 'index.md') continue
+
     const src = join(source, file)
     const dest = join(target, file)
     const destDir = dirname(dest)
@@ -85,17 +99,19 @@ function syncLanguage(lang) {
 
 const MODULE_DIRS = /^(\d+-(?:slash-commands|memory|skills|subagents|mcp|hooks|plugins|checkpoints|advanced-features|cli))/
 
-function generateSidebarItems(dir, basePath = '') {
+function generateSidebarItems(dir, basePath = '', langCode = 'en') {
   if (!existsSync(dir)) return []
 
   const items = []
   const entries = readdirSync(dir).sort()
+  const isTopLevel = langCode === 'en' ? basePath === '' : basePath === langCode
 
   const mdFiles = []
   const subDirs = []
 
   for (const entry of entries) {
     if (entry.startsWith('.')) continue
+    if (langCode === 'en' && isTopLevel && SKIP_FOR_ROOT.has(entry)) continue
     const fullPath = join(dir, entry)
     const relPath = basePath ? `${basePath}/${entry}` : entry
 
@@ -118,35 +134,41 @@ function generateSidebarItems(dir, basePath = '') {
   }
 
   for (const sub of moduleSubs) {
-    const subItems = generateSidebarItems(sub.path, sub.rel)
+    const subItems = generateSidebarItems(sub.path, sub.rel, langCode)
     if (subItems.length > 0) {
       const hasIndex = existsSync(join(sub.path, 'index.md'))
-      const link = hasIndex ? `/${sub.rel}/` : undefined
+      items.push({
+        text: sidebarGroupTitle(sub, langCode),
+        ...(hasIndex && { link: `/${sub.rel}/` }),
+        items: subItems,
+        collapsed: false,
+      })
     }
   }
 
   if (mdFiles.length > 0 || otherSubs.length > 0) {
     const generalItems = []
     for (const f of mdFiles) {
+      if (isTopLevel && f.name === 'index.md') continue
       generalItems.push({
-        text: makeTitle(f.name.replace(/\.md$/, '')),
+        text: sidebarTitle(f, langCode),
         link: `/${f.rel.replace(/\.md$/, '')}`,
       })
     }
     for (const sub of otherSubs) {
-      const subItems = generateSidebarItems(sub.path, sub.rel)
+      const subItems = generateSidebarItems(sub.path, sub.rel, langCode)
       if (subItems.length > 0) {
         const hasIndex = existsSync(join(sub.path, 'index.md'))
         generalItems.push({
-          text: makeTitle(sub.name),
+          text: sidebarGroupTitle(sub, langCode),
           ...(hasIndex && { link: `/${sub.rel}/` }),
           items: subItems,
-          collapsed: true,
+          collapsed: false,
         })
       }
     }
     if (moduleSubs.length > 0) {
-      items.push({ text: 'General', items: generalItems, collapsed: true })
+      items.push({ text: 'General', items: generalItems, collapsed: false })
     } else {
       items.push(...generalItems)
     }
@@ -168,6 +190,27 @@ const MODULE_TITLES = {
   '10-cli': 'CLI Reference',
 }
 
+function extractTitle(filePath) {
+  if (!existsSync(filePath)) return null
+  const content = readFileSync(filePath, 'utf-8')
+  const match = content.match(/^#\s+(.+)$/m)
+  return match ? match[1].trim() : null
+}
+
+function sidebarTitle(file, langCode) {
+  if (langCode === 'en') return makeTitle(file.name.replace(/\.md$/, ''))
+  const fullFilePath = join(DOCS, file.rel)
+  const title = extractTitle(fullFilePath)
+  return title || makeTitle(file.name.replace(/\.md$/, ''))
+}
+
+function sidebarGroupTitle(sub, langCode) {
+  if (langCode === 'en' || MODULE_TITLES[sub.name]) return makeTitle(sub.name)
+  const indexPath = join(DOCS, sub.rel, 'index.md')
+  const title = extractTitle(indexPath)
+  return title || makeTitle(sub.name)
+}
+
 function makeTitle(name) {
   if (MODULE_TITLES[name]) return MODULE_TITLES[name]
   return name.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
@@ -179,7 +222,7 @@ function generateSidebarConfig() {
   for (const lang of LANGUAGES) {
     const targetDir = lang.code === 'en' ? DOCS : join(DOCS, lang.code)
     const prefix = lang.code === 'en' ? '' : `${lang.code}`
-    const items = generateSidebarItems(targetDir, prefix)
+    const items = generateSidebarItems(targetDir, prefix, lang.code)
     if (items.length > 0) {
       sidebar[`/${lang.code === 'en' ? '' : lang.code + '/'}`] = items
     }
@@ -233,6 +276,8 @@ function renameReadmeToIndex() {
     const mdFiles = listMdFiles(lang.target)
     for (const file of mdFiles) {
       if (basename(file) !== 'README.md') continue
+      // Skip top-level README.md — our custom homepage takes that slot
+      if (dirname(file) === '.') continue
       const oldPath = join(lang.target, file)
       const newPath = join(lang.target, dirname(file), 'index.md')
       if (!existsSync(newPath)) {
@@ -300,6 +345,24 @@ renameReadmeToIndex()
 for (const lang of LANGUAGES) {
   rewriteImagePaths(lang)
 }
+
+const CUSTOM_LOGOS = [
+  { src: resolve(ROOT, 'assets/logo/logo-light.webp'), dest: resolve(DOCS, 'assets/logo/logo-light.webp') },
+  { src: resolve(ROOT, 'assets/logo/logo-dark.webp'), dest: resolve(DOCS, 'assets/logo/logo-dark.webp') },
+]
+
+function copyCustomLogos() {
+  let copied = 0
+  for (const { src, dest } of CUSTOM_LOGOS) {
+    if (!existsSync(src)) continue
+    mkdirSync(dirname(dest), { recursive: true })
+    cpSync(src, dest)
+    copied++
+  }
+  if (copied > 0) console.log(`  Copied ${copied} custom logos to docs/assets/logo/`)
+}
+
+copyCustomLogos()
 console.log('\n=== Generating Sidebar ===')
 generateSidebarConfig()
 console.log('\nSync complete.')
