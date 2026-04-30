@@ -93,9 +93,19 @@
   color: #dedede;
 }
 
+.dark .vp-doc strong,
+.dark .vp-doc b {
+  color: #faf9f5;
+}
+
 .dark .vp-doc blockquote p,
 .dark .vp-doc blockquote li {
   color: #9e9e9e;
+}
+
+.dark .vp-doc blockquote strong,
+.dark .vp-doc blockquote b {
+  color: #dedede;
 }
 
 /* ── Home hero: Amber+teal glow (contrasts coral logo) ── */
