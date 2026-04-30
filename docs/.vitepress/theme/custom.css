@@ -39,7 +39,7 @@
   --vp-c-brand-3: #cc785c;
   --vp-c-brand-soft: rgba(204, 120, 92, 0.14);
 
-  /* Code blocks: light warm surface (not dark) */
+  /* Code: warm cream background */
   --vp-code-block-bg: #f5f0e8;
   --vp-code-block-divider-color: #e6dfd8;
   --vp-code-bg: rgba(204, 120, 92, 0.08);
@@ -53,6 +53,10 @@
   --vp-c-bg-elv: #252320;
   --vp-c-bg-soft: #252320;
 
+  /* Text hierarchy per DESIGN.md:
+     on-dark (#faf9f5)    → headings, nav, emphasis
+     on-dark-soft (#a09d96) → secondary, muted
+     muted (#6c6a64)       → subtle, caret */
   --vp-c-text-1: #faf9f5;
   --vp-c-text-2: #a09d96;
   --vp-c-text-3: #6c6a64;
@@ -71,14 +75,30 @@
   --vp-c-brand-3: #e8956e;
   --vp-c-brand-soft: rgba(232, 149, 110, 0.16);
 
-  /* Code blocks: dark surface */
+  /* Code: dark surface */
   --vp-code-block-bg: #1f1e1b;
   --vp-code-block-divider-color: #2e2c29;
   --vp-code-bg: rgba(232, 149, 110, 0.12);
   --vp-code-color: #e8956e;
 }
 
-/* ── Home hero: Warm amber glow (contrasts coral logo) ── */
+/* ── Dark mode: Soften body text (not pure white) ──
+   DESIGN.md: body text should be warm gray, not #faf9f5
+   Headings keep bright --vp-c-text-1 via heading selectors.
+   Blockquote text stays softer via its own rule. */
+.dark .vp-doc p,
+.dark .vp-doc li,
+.dark .vp-doc td,
+.dark .vp-doc th {
+  color: #c8c5be;
+}
+
+.dark .vp-doc blockquote p,
+.dark .vp-doc blockquote li {
+  color: #a09d96;
+}
+
+/* ── Home hero: Amber+teal glow (contrasts coral logo) ── */
 :root {
   --vp-home-hero-name-color: #cc785c;
   --vp-home-hero-name-background: transparent;
@@ -130,7 +150,6 @@
   }
 }
 
-/* Logo outline for visibility against glow */
 .VPHero .VPImage {
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.15));
 }
@@ -139,15 +158,16 @@
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3));
 }
 
-/* ── Headings: Serif display (EB Garamond as Copernicus substitute) ── */
+/* ── Headings: Serif display ── */
 .vp-doc h1,
-.vp-doc h2 {
+.vp-doc h2,
+.vp-doc h3 {
   font-family: 'EB Garamond', 'Tiempos Headline', Georgia, serif;
   font-weight: 500;
   letter-spacing: -0.02em;
 }
 
-/* ── Chinese font overrides (keep CJK readability) ── */
+/* ── Chinese font overrides ── */
 :root:where(:lang(zh)) {
   --vp-font-family-base:
     'Punctuation SC', 'Inter', ui-sans-serif, system-ui, sans-serif,

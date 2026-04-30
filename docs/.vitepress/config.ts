@@ -10,8 +10,8 @@ const docsRoot = resolve(import.meta.dirname, '..')
 export default defineConfig({
   base,
   head: [
-    ['link', { rel: 'icon', href: '/favicon-light.png', media: '(prefers-color-scheme: light)' }],
-    ['link', { rel: 'icon', href: '/favicon-dark.png', media: '(prefers-color-scheme: dark)' }],
+    ['link', { rel: 'icon', href: `${base}favicon-light.png`, media: '(prefers-color-scheme: light)' }],
+    ['link', { rel: 'icon', href: `${base}favicon-dark.png`, media: '(prefers-color-scheme: dark)' }],
   ],
   title: 'Claude How-To',
   description: 'Master Claude Code in a Weekend',
