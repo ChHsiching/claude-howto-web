@@ -11,7 +11,7 @@ hero:
   actions:
     - theme: brand
       text: 开始学习
-      link: /zh/01-slash-commands/
+      link: /zh/README
     - theme: alt
       text: 学习路线
       link: /zh/LEARNING-ROADMAP

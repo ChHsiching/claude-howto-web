@@ -1,3 +1,49 @@
+/* Hero glow — oversized bg circle for opaque logos */
+:root {
+  --vp-home-hero-image-background-image: linear-gradient(
+    -45deg,
+    #bd34fe 50%,
+    #47caff 50%
+  );
+  --vp-home-hero-image-filter: blur(72px);
+}
+
+@media (min-width: 640px) {
+  :root {
+    --vp-home-hero-image-filter: blur(88px);
+  }
+}
+
+@media (min-width: 960px) {
+  :root {
+    --vp-home-hero-image-filter: blur(108px);
+  }
+}
+
+/* Make image-bg larger than image-src so glow peeks around the logo */
+.VPHero .image-bg {
+  width: 256px !important;
+  height: 256px !important;
+}
+
+@media (min-width: 640px) {
+  .VPHero .image-bg {
+    width: 320px !important;
+    height: 320px !important;
+  }
+}
+
+@media (min-width: 960px) {
+  .VPHero .image-bg {
+    width: 384px !important;
+    height: 384px !important;
+  }
+}
+
+.VPHero .VPImage {
+  filter: drop-shadow(0 0 24px rgba(189, 52, 254, 0.35));
+}
+
 /* Sidebar: logo fills width */
 .VPSidebar .VPImage {
   width: 100%;

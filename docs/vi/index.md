@@ -11,7 +11,7 @@ hero:
   actions:
     - theme: brand
       text: Bắt đầu học
-      link: /vi/01-slash-commands/
+      link: /vi/README
     - theme: alt
       text: Lộ trình học tập
       link: /vi/LEARNING-ROADMAP
