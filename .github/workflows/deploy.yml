@@ -1,8 +1,8 @@
 name: Deploy VitePress Site
 
 on:
-  schedule:
-    - cron: '17 3 * * *'
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -15,10 +15,8 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  check-and-build:
+  build:
     runs-on: ubuntu-latest
-    outputs:
-      has_changes: ${{ steps.check.outputs.has_changes }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,65 +24,31 @@ jobs:
           submodules: true
           fetch-depth: 0
 
-      - name: Check upstream changes
-        id: check
-        run: |
-          cd upstream
-          UPSTREAM_HEAD=$(git rev-parse HEAD)
-          echo "upstream_head=$UPSTREAM_HEAD"
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "has_changes=true" >> "$GITHUB_OUTPUT"
-          else
-            LAST_COMMIT_FILE=".claude/last-upstream-commit.txt"
-            if [[ -f "$LAST_COMMIT_FILE" ]]; then
-              LAST_COMMIT=$(cat "$LAST_COMMIT_FILE")
-              if [[ "$UPSTREAM_HEAD" == "$LAST_COMMIT" ]]; then
-                echo "No upstream changes detected"
-                echo "has_changes=false" >> "$GITHUB_OUTPUT"
-                exit 0
-              fi
-            fi
-            echo "Upstream changes detected"
-            echo "has_changes=true" >> "$GITHUB_OUTPUT"
-          fi
-          mkdir -p .claude
-          echo "$UPSTREAM_HEAD" > "$LAST_COMMIT_FILE"
-
       - name: Setup Node
-        if: steps.check.outputs.has_changes == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
 
       - name: Install dependencies
-        if: steps.check.outputs.has_changes == 'true'
         run: npm ci
 
       - name: Build site
-        if: steps.check.outputs.has_changes == 'true'
         run: npm run docs:build
 
       - name: Upload artifact
-        if: steps.check.outputs.has_changes == 'true'
         uses: actions/upload-pages-artifact@v3
         with:
           path: docs/.vitepress/dist
 
-      - name: Commit upstream tracking
-        if: steps.check.outputs.has_changes == 'true'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .claude/last-upstream-commit.txt
-          git diff --cached --quiet || git commit -m "chore: update upstream tracking"
-          git push
-
   deploy:
-    if: needs.check-and-build.outputs.has_changes == 'true'
-    needs: check-and-build
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    needs: build
     runs-on: ubuntu-latest
     name: Deploy
     steps:
