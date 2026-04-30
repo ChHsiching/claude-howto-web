@@ -364,18 +364,19 @@ for (const lang of LANGUAGES) {
 }
 
 function replaceLogoImages() {
-  const transparentLogo = resolve(UPSTREAM, 'assets/logo/logo-full.svg')
-  if (!existsSync(transparentLogo)) {
-    console.warn('  Transparent logo not found, skipping replacement')
+  const logoFull = resolve(UPSTREAM, 'assets/logo/logo-full.svg')
+  const logoWhite = resolve(UPSTREAM, 'assets/logo/logo-white.svg')
+  if (!existsSync(logoFull) || !existsSync(logoWhite)) {
+    console.warn('  Transparent logos not found, skipping replacement')
     return
   }
 
   const logoDir = resolve(DOCS, 'assets/logo')
   mkdirSync(logoDir, { recursive: true })
-  const destLogo = resolve(logoDir, 'logo-full.svg')
-  cpSync(transparentLogo, destLogo)
+  cpSync(logoFull, resolve(logoDir, 'logo-full.svg'))
+  cpSync(logoWhite, resolve(logoDir, 'logo-white.svg'))
 
-  const LOGO_RE = /(?:resources\/logos\/claude-howto-logo(?:-dark)?\.svg)/g
+  const LOGO_RE = /resources\/logos\/claude-howto-logo/
   let replaced = 0
 
   for (const lang of LANGUAGES) {
@@ -384,19 +385,16 @@ function replaceLogoImages() {
       const filePath = join(lang.target, file)
       let content = readFileSync(filePath, 'utf-8')
       if (!LOGO_RE.test(content)) continue
-      LOGO_RE.lastIndex = 0
 
       content = content.replace(
-        /<picture>\s*<source[^>]*>\s*<img[^>]*claude-howto-logo[^>]*>\s*<\/picture>/g,
-        '<img alt="Claude How To" src="/assets/logo/logo-full.svg">'
+        /<picture>\s*<source[^>]*claude-howto-logo[^>]*>\s*<img[^>]*claude-howto-logo[^>]*>\s*<\/picture>/g,
+        '<img class="doc-logo-light" alt="Claude How To" src="/assets/logo/logo-full.svg"><img class="doc-logo-dark" alt="Claude How To" src="/assets/logo/logo-white.svg">'
       )
-      LOGO_RE.lastIndex = 0
-      content = content.replace(LOGO_RE, '/assets/logo/logo-full.svg')
       writeFileSync(filePath, content)
       replaced++
     }
   }
-  if (replaced > 0) console.log(`  Replaced logo in ${replaced} files with transparent version`)
+  if (replaced > 0) console.log(`  Replaced logo in ${replaced} files with transparent versions`)
 }
 
 const CUSTOM_LOGOS = [

@@ -207,6 +207,17 @@
   list-style: none;
 }
 
+/* ── Doc logo: theme-aware via CSS ── */
+.vp-doc .doc-logo-dark {
+  display: none;
+}
+html.dark .vp-doc .doc-logo-light {
+  display: none;
+}
+html.dark .vp-doc .doc-logo-dark {
+  display: inline;
+}
+
 /* ── Badges: inline images inside links ── */
 .vp-doc p > a > img {
   display: inline;
