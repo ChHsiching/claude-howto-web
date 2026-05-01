@@ -122,10 +122,10 @@ export default defineConfig({
       label: 'On this page',
     },
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/luongnv89/claude-howto' },
+      { icon: 'github', link: 'https://github.com/ChHsiching/claude-howto-web' },
     ],
     footer: {
-      message: 'Based on <a href="https://github.com/luongnv89/claude-howto">luongnv89/claude-howto</a> — MIT License',
+      message: '<a href="https://github.com/ChHsiching/claude-howto-web">ChHsiching/claude-howto-web</a> — Based on <a href="https://github.com/luongnv89/claude-howto">luongnv89/claude-howto</a> — MIT License',
     },
   },
 })
