@@ -16,7 +16,7 @@ const LANGUAGES = [
 
 const EXCLUDE_DIRS = new Set(['.git', 'node_modules', 'local-progress', '.github'])
 const EXCLUDE_FILES = new Set(['coverage.xml', 'INDEX.md'])
-const SKIP_FOR_ROOT = new Set(['vi', 'zh', 'uk'])
+const SKIP_FOR_ROOT = new Set(['vi', 'zh', 'uk', 'ja'])
 
 const EXCLUDE_SIDEBAR_FILES = new Set([
   'CHANGELOG.md', 'CONTRIBUTING.md', 'CODE_OF_CONDUCT.md',
