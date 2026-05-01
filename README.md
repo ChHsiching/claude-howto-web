@@ -2,20 +2,20 @@
 
 # claude-howto-web
 
-A VitePress-powered static site that faithfully presents the content of [luongnv89/claude-howto](https://github.com/luongnv89/claude-howto) in 4 languages.
+A VitePress-powered static site that faithfully presents the content of [luongnv89/claude-howto](https://github.com/luongnv89/claude-howto) in 5 languages.
 
 ## Features
 
-- **Multilingual**: English, Tiếng Việt, 中文, Українська — using VitePress i18n
+- **Multilingual**: English, Tiếng Việt, 中文, Українська, 日本語 — using VitePress i18n
 - **Dynamic sidebar**: Auto-generated from upstream content structure
-- **Automated sync**: Content pulled from upstream via git submodule
-- **CI/CD**: GitHub Actions builds and deploys on schedule or manually
+- **Automated sync**: Content pulled from upstream via git submodule every 6 hours
+- **CI/CD**: GitHub Actions builds and deploys to GitHub Pages
 
 ## Quick Start
 
 ```bash
 # Clone with submodule
-git clone --recurse-submodules https://github.com/chhsiching/claude-howto-web.git
+git clone --recurse-submodules https://github.com/ChHsiching/claude-howto-web.git
 cd claude-howto-web
 
 # Use correct Node version
@@ -58,19 +58,24 @@ git add upstream
 git commit -m "chore: update upstream submodule"
 ```
 
-## GitHub Actions Workflow
+## GitHub Actions Workflows
 
-The `deploy.yml` workflow:
+### Deploy (`deploy.yml`)
+- Triggers on push to `main`
+- Builds and deploys to GitHub Pages
 
-- **Scheduled**: Runs daily at 03:17 UTC
+### Sync (`sync.yml`)
+- **Scheduled**: Checks for upstream changes every 6 hours
 - **Manual**: Trigger via `workflow_dispatch` from the Actions tab
-- **Smart build**: Only builds when upstream has new commits (skips if unchanged)
-- **Deploy**: Builds and deploys to GitHub Pages
+- **Smart build**: Only builds when upstream has new commits
+- Commits synced content to `develop`, then merges to `main` (triggers deploy)
 
 ## Project Structure
 
 ```
-├── .github/workflows/deploy.yml  # CI/CD pipeline
+├── .github/workflows/
+│   ├── deploy.yml                # Deploy to GitHub Pages
+│   └── sync.yml                  # Upstream sync (every 6 hours)
 ├── docs/
 │   ├── .vitepress/config.ts      # VitePress config with i18n
 │   ├── .vitepress/sidebar.json   # Auto-generated sidebar
@@ -78,7 +83,8 @@ The `deploy.yml` workflow:
 │   ├── 01-slash-commands/ ...    # English content (root locale)
 │   ├── vi/                       # Vietnamese
 │   ├── zh/                       # Chinese
-│   └── uk/                       # Ukrainian
+│   ├── uk/                       # Ukrainian
+│   └── ja/                       # Japanese
 ├── scripts/sync-content.mjs      # Content sync + sidebar generator
 ├── upstream/                     # git submodule (luongnv89/claude-howto)
 └── package.json
