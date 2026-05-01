@@ -10,6 +10,7 @@ const docsRoot = resolve(import.meta.dirname, '..')
 export default defineConfig({
   base,
   head: [
+    ['meta', { name: 'color-scheme', content: 'light dark' }],
     ['link', { rel: 'icon', href: `${base}favicon-light.png`, media: '(prefers-color-scheme: light)' }],
     ['link', { rel: 'icon', href: `${base}favicon-dark.png`, media: '(prefers-color-scheme: dark)' }],
   ],
