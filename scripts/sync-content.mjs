@@ -12,6 +12,7 @@ const LANGUAGES = [
   { code: 'vi', source: join(UPSTREAM, 'vi'), target: join(DOCS, 'vi') },
   { code: 'zh', source: join(UPSTREAM, 'zh'), target: join(DOCS, 'zh') },
   { code: 'uk', source: join(UPSTREAM, 'uk'), target: join(DOCS, 'uk') },
+  { code: 'ja', source: join(UPSTREAM, 'ja'), target: join(DOCS, 'ja') },
 ]
 
 const EXCLUDE_DIRS = new Set(['.git', 'node_modules', 'local-progress', '.github'])
