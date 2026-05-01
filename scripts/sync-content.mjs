@@ -372,9 +372,13 @@ function replaceLogoImages() {
   }
 
   const logoDir = resolve(DOCS, 'assets/logo')
+  const publicLogoDir = resolve(DOCS, 'public/assets/logo')
   mkdirSync(logoDir, { recursive: true })
+  mkdirSync(publicLogoDir, { recursive: true })
   cpSync(logoFull, resolve(logoDir, 'logo-full.svg'))
   cpSync(logoWhite, resolve(logoDir, 'logo-white.svg'))
+  cpSync(logoFull, resolve(publicLogoDir, 'logo-full.svg'))
+  cpSync(logoWhite, resolve(publicLogoDir, 'logo-white.svg'))
 
   const LOGO_RE = /resources\/logos\/claude-howto-logo/
   let replaced = 0
@@ -400,6 +404,8 @@ function replaceLogoImages() {
 const CUSTOM_LOGOS = [
   { src: resolve(ROOT, 'assets/logo/logo-light.webp'), dest: resolve(DOCS, 'assets/logo/logo-light.webp') },
   { src: resolve(ROOT, 'assets/logo/logo-dark.webp'), dest: resolve(DOCS, 'assets/logo/logo-dark.webp') },
+  { src: resolve(ROOT, 'assets/logo/logo-light.webp'), dest: resolve(DOCS, 'public/assets/logo/logo-light.webp') },
+  { src: resolve(ROOT, 'assets/logo/logo-dark.webp'), dest: resolve(DOCS, 'public/assets/logo/logo-dark.webp') },
 ]
 
 function copyCustomLogos() {
