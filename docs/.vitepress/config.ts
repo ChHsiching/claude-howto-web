@@ -99,6 +99,17 @@ export default defineConfig({
         docFooter: { prev: 'Попередня', next: 'Наступна' },
       },
     },
+    ja: {
+      label: '日本語',
+      lang: 'ja',
+      title: 'Claude How-To',
+      description: '週末で Claude Code をマスター',
+      themeConfig: {
+        nav: navJa(),
+        sidebar,
+        docFooter: { prev: '前へ', next: '次へ' },
+      },
+    },
   },
   themeConfig: {
     logo: { light: '/assets/logo/logo-light.webp', dark: '/assets/logo/logo-dark.webp' },
@@ -234,6 +245,36 @@ function navUk() {
         { text: 'Навчальний план', link: '/uk/LEARNING-ROADMAP' },
         { text: 'Довідка', link: '/uk/QUICK_REFERENCE' },
         { text: 'Вихідний репозиторій', link: 'https://github.com/luongnv89/claude-howto' },
+      ],
+    },
+  ]
+}
+
+function navJa() {
+  return [
+    { text: 'ホーム', link: '/ja/' },
+    {
+      text: 'モジュール',
+      items: [
+        { text: 'スラッシュコマンド', link: '/ja/01-slash-commands/' },
+        { text: 'メモリ', link: '/ja/02-memory/' },
+        { text: 'スキル', link: '/ja/03-skills/' },
+        { text: 'サブエージェント', link: '/ja/04-subagents/' },
+        { text: 'MCP', link: '/ja/05-mcp/' },
+        { text: 'フック', link: '/ja/06-hooks/' },
+        { text: 'プラグイン', link: '/ja/07-plugins/' },
+        { text: 'チェックポイント', link: '/ja/08-checkpoints/' },
+        { text: '高度な機能', link: '/ja/09-advanced-features/' },
+        { text: 'CLI', link: '/ja/10-cli/' },
+      ],
+    },
+    {
+      text: 'リソース',
+      items: [
+        { text: 'カタログ', link: '/ja/CATALOG' },
+        { text: '学習ロードマップ', link: '/ja/LEARNING-ROADMAP' },
+        { text: 'クイックリファレンス', link: '/ja/QUICK_REFERENCE' },
+        { text: 'アップストリームリポジトリ', link: 'https://github.com/luongnv89/claude-howto' },
       ],
     },
   ]
