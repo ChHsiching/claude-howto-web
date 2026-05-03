@@ -3,8 +3,6 @@ node_modules/
 docs/.vitepress/dist/
 docs/.vitepress/cache/
 docs/.vitepress/.temp/
-.claude/last-upstream-commit.txt
-
 # Synced content (generated from upstream submodule)
 docs/01-*/
 docs/02-*/

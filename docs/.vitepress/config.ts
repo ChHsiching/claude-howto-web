@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitepress'
+import { withMermaid } from 'vitepress-plugin-mermaid'
 import { resolve } from 'node:path'
 import { existsSync, readFileSync } from 'node:fs'
 import taskLists from 'markdown-it-task-lists'
@@ -7,7 +8,7 @@ import sidebar from './sidebar.json'
 const base = '/claude-howto-web/'
 const docsRoot = resolve(import.meta.dirname, '..')
 
-export default defineConfig({
+export default withMermaid({
   base,
   head: [
     ['meta', { name: 'color-scheme', content: 'light dark' }],
@@ -128,6 +129,7 @@ export default defineConfig({
       message: '<a href="https://github.com/ChHsiching/claude-howto-web">ChHsiching/claude-howto-web</a> — Based on <a href="https://github.com/luongnv89/claude-howto">luongnv89/claude-howto</a> — MIT License',
     },
   },
+  mermaid: {},
 })
 
 function navEn() {

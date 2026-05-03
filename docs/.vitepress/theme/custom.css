@@ -218,13 +218,10 @@ html.dark .vp-doc .doc-logo-dark {
   display: inline;
 }
 
-/* ── Badges: inline images inside links ── */
+/* ── Badges: inline images inside links (shields.io etc.) ── */
 .vp-doc p > a > img {
   display: inline;
   vertical-align: middle;
-  width: auto !important;
-  max-width: none;
-  height: 20px;
   margin: 0 4px;
 }
 
