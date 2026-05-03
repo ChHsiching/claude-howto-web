@@ -202,9 +202,46 @@
   object-fit: contain;
 }
 
-/* ── Task lists: hide bullet on checkbox items ── */
+/* ── Task lists: checkbox styling ── */
 .vp-doc .task-list-item {
   list-style: none;
+}
+
+.vp-doc .task-list-item-checkbox {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--vp-c-text-3);
+  border-radius: 3px;
+  background-color: transparent;
+  vertical-align: middle;
+  margin-right: 6px;
+  position: relative;
+  cursor: pointer;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.vp-doc .task-list-item-checkbox:checked {
+  background-color: var(--vp-c-brand-1);
+  border-color: var(--vp-c-brand-1);
+}
+
+.vp-doc .task-list-item-checkbox:checked::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 5px;
+  height: 9px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.vp-doc .task-list-item-checkbox:disabled {
+  opacity: 0.8;
+  cursor: default;
 }
 
 /* ── Doc logo: theme-aware via CSS ── */
