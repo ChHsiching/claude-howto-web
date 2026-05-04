@@ -31,10 +31,20 @@ jobs:
           node -e '
           const fs = require("fs");
           const BASE = process.env.UMAMI_API_URL;
+          const WID = process.env.UMAMI_WEBSITE_ID;
           const headers = { "Content-Type": "application/json" };
+          const PATH_PREFIX = "/claude-howto-web";
+
+          async function getVisitors(authHeaders, startAt, endAt) {
+            const url = BASE + "/api/websites/" + WID
+              + "/metrics?type=path&startAt=" + startAt + "&endAt=" + endAt;
+            const paths = await fetch(url, { headers: authHeaders }).then(r => r.json());
+            return paths
+              .filter(p => p.x.startsWith(PATH_PREFIX))
+              .reduce((sum, p) => sum + p.y, 0);
+          }
 
           async function run() {
-            // Authenticate
             const auth = await fetch(BASE + "/api/auth/login", {
               method: "POST", headers,
               body: JSON.stringify({
@@ -48,22 +58,8 @@ jobs:
             const todayStart = new Date();
             todayStart.setUTCHours(0, 0, 0, 0);
 
-            // Today visitors
-            const today = await fetch(
-              BASE + "/api/websites/" + process.env.UMAMI_WEBSITE_ID
-              + "/stats?startAt=" + todayStart.getTime() + "&endAt=" + now,
-              { headers: authHeaders }
-            ).then(r => r.json());
-
-            // Total visitors
-            const total = await fetch(
-              BASE + "/api/websites/" + process.env.UMAMI_WEBSITE_ID
-              + "/stats?startAt=0&endAt=" + now,
-              { headers: authHeaders }
-            ).then(r => r.json());
-
-            const tv = today.visitors ?? 0;
-            const totv = total.visitors ?? 0;
+            const tv = await getVisitors(authHeaders, todayStart.getTime(), now);
+            const totv = await getVisitors(authHeaders, 0, now);
 
             const updatedAt = new Date().toLocaleString("sv-SE", {
               timeZone: "Asia/Shanghai",
