@@ -1,8 +1,25 @@
 🌐 **Language / 语言:** [English](README.md) | [中文](README.zh-CN.md)
 
-# claude-howto-web
+<div align="center">
 
-A VitePress-powered static site that faithfully presents the content of [luongnv89/claude-howto](https://github.com/luongnv89/claude-howto) in 5 languages.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/logo/readme-light.png">
+  <source media="(prefers-color-scheme: light)" srcset="assets/logo/readme-dark.png">
+  <img alt="Claude How-To" width="180" src="assets/logo/readme-dark.png">
+</picture>
+
+**Master Claude Code in a Weekend**
+
+A VitePress-powered multilingual site presenting [luongnv89/claude-howto](https://github.com/luongnv89/claude-howto) content in 5 languages.
+
+[![Live Site](https://img.shields.io/badge/Live-Site-8B5CF6?logo=githubpages&logoColor=white)](https://chhsiching.github.io/claude-howto-web/)
+[![Today Visitors](https://img.shields.io/badge/dynamic/json?label=Today%20Visitors&query=%24.todayVisitors&url=https://raw.githubusercontent.com/ChHsiching/claude-howto-web/main/docs/stats.json&color=3B82F6)](https://github.com/ChHsiching/claude-howto-web)
+[![Total Visitors](https://img.shields.io/badge/dynamic/json?label=Total%20Visitors&query=%24.totalVisitors&url=https://raw.githubusercontent.com/ChHsiching/claude-howto-web/main/docs/stats.json&color=6366F1)](https://github.com/ChHsiching/claude-howto-web)
+[![Privacy First](https://img.shields.io/badge/Analytics-Privacy%20First-10B981?logo=umami&logoColor=white)](https://umami.is)
+
+</div>
+
+---
 
 ## Features
 
@@ -11,11 +28,6 @@ A VitePress-powered static site that faithfully presents the content of [luongnv
 - **Automated sync**: Content pulled from upstream via git submodule every 6 hours
 - **CI/CD**: GitHub Actions builds and deploys to GitHub Pages
 - **Privacy-first analytics**: Self-hosted [Umami](https://umami.is/) — no cookies, no personal data collected
-
-## Visitor Stats
-
-![Today Visitors](https://img.shields.io/badge/dynamic/json?label=Today%20Visitors&query=%24.todayVisitors&url=https://raw.githubusercontent.com/ChHsiching/claude-howto-web/main/docs/stats.json&color=blue)
-![Total Visitors](https://img.shields.io/badge/dynamic/json?label=Total%20Visitors&query=%24.totalVisitors&url=https://raw.githubusercontent.com/ChHsiching/claude-howto-web/main/docs/stats.json&color=green)
 
 ## Quick Start
 
@@ -76,12 +88,18 @@ git commit -m "chore: update upstream submodule"
 - **Smart build**: Only builds when upstream has new commits
 - Commits synced content to `develop`, then merges to `main` (triggers deploy)
 
+### Stats (`update-stats.yml`)
+- **Scheduled**: Updates visitor stats daily at 10:00 and 22:00 (Asia/Shanghai)
+- **Privacy**: Only aggregates path-level visit counts from self-hosted Umami
+- Does not trigger site redeployment (`[skip ci]`)
+
 ## Project Structure
 
 ```
 ├── .github/workflows/
 │   ├── deploy.yml                # Deploy to GitHub Pages
-│   └── sync.yml                  # Upstream sync (every 6 hours)
+│   ├── sync.yml                  # Upstream sync (every 6 hours)
+│   └── update-stats.yml          # Visitor stats (twice daily)
 ├── docs/
 │   ├── .vitepress/config.ts      # VitePress config with i18n
 │   ├── .vitepress/sidebar.json   # Auto-generated sidebar
@@ -91,7 +109,9 @@ git commit -m "chore: update upstream submodule"
 │   ├── zh/                       # Chinese
 │   ├── uk/                       # Ukrainian
 │   └── ja/                       # Japanese
-├── scripts/sync-content.mjs      # Content sync + sidebar generator
+├── scripts/
+│   ├── sync-content.mjs          # Content sync + sidebar generator
+│   └── fetch-stats.mjs           # Umami API stats fetcher
 ├── upstream/                     # git submodule (luongnv89/claude-howto)
 └── package.json
 ```
