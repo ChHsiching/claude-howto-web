@@ -1,44 +1,39 @@
-import { writeFileSync } from 'node:fs'
+import { writeFileSync, appendFileSync } from 'node:fs'
 
-const UMAMI_API_URL = process.env.UMAMI_API_URL
-const UMAMI_USERNAME = process.env.UMAMI_USERNAME
-const UMAMI_PASSWORD = process.env.UMAMI_PASSWORD
-const UMAMI_WEBSITE_ID = process.env.UMAMI_WEBSITE_ID
+const BASE = process.env.UMAMI_API_URL
+const WID = process.env.UMAMI_WEBSITE_ID
+const PATH_PREFIX = '/claude-howto-web'
 
-async function fetchJSON(url, options = {}) {
-  const res = await fetch(url, options)
-  if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`)
-  return res.json()
+async function getVisitors(headers, startAt, endAt) {
+  const url = `${BASE}/api/websites/${WID}/metrics?type=path&startAt=${startAt}&endAt=${endAt}`
+  const paths = await fetch(url, { headers }).then(r => r.json())
+  return paths
+    .filter(p => p.x.startsWith(PATH_PREFIX))
+    .reduce((sum, p) => sum + p.y, 0)
 }
 
 // Authenticate
-const { token } = await fetchJSON(`${UMAMI_API_URL}/api/auth/login`, {
+const { token } = await fetch(`${BASE}/api/auth/login`, {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ username: UMAMI_USERNAME, password: UMAMI_PASSWORD }),
-})
+  body: JSON.stringify({
+    username: process.env.UMAMI_USERNAME,
+    password: process.env.UMAMI_PASSWORD,
+  }),
+}).then(r => r.json())
 
-const headers = { Authorization: `Bearer ${token}` }
+const authHeaders = {
+  'Content-Type': 'application/json',
+  Authorization: `Bearer ${token}`,
+}
+
 const now = Date.now()
 const todayStart = new Date()
 todayStart.setUTCHours(0, 0, 0, 0)
 
-// Fetch today's visitors
-const today = await fetchJSON(
-  `${UMAMI_API_URL}/api/websites/${UMAMI_WEBSITE_ID}/stats?startAt=${todayStart.getTime()}&endAt=${now}`,
-  { headers },
-)
+const todayVisitors = await getVisitors(authHeaders, todayStart.getTime(), now)
+const totalVisitors = await getVisitors(authHeaders, 0, now)
 
-// Fetch total visitors
-const total = await fetchJSON(
-  `${UMAMI_API_URL}/api/websites/${UMAMI_WEBSITE_ID}/stats?startAt=0&endAt=${now}`,
-  { headers },
-)
-
-const todayVisitors = today.visitors ?? 0
-const totalVisitors = total.visitors ?? 0
-
-// Write stats.json
 const updatedAt = new Date().toLocaleString('sv-SE', {
   timeZone: 'Asia/Shanghai',
   year: 'numeric', month: '2-digit', day: '2-digit',
@@ -48,10 +43,8 @@ const updatedAt = new Date().toLocaleString('sv-SE', {
 const stats = { todayVisitors, totalVisitors, updatedAt }
 writeFileSync('docs/stats.json', JSON.stringify(stats, null, 2) + '\n')
 
-// Output for GITHUB_OUTPUT
 const outputFile = process.env.GITHUB_OUTPUT
 if (outputFile) {
-  const { appendFileSync } = await import('node:fs')
   appendFileSync(outputFile, `today=${todayVisitors}\n`)
   appendFileSync(outputFile, `total=${totalVisitors}\n`)
 }
