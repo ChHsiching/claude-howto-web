@@ -3,9 +3,9 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/logo/readme-light.png">
-  <source media="(prefers-color-scheme: light)" srcset="assets/logo/readme-dark.png">
-  <img alt="Claude How-To" width="180" src="assets/logo/readme-dark.png">
+  <source media="(prefers-color-scheme: dark)" srcset="assets/logo/readme-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="assets/logo/readme-light.png">
+  <img alt="Claude How-To" width="180" src="assets/logo/readme-light.png">
 </picture>
 
 **用一个周末掌握 Claude Code**
