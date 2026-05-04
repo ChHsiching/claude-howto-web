@@ -10,6 +10,12 @@ A VitePress-powered static site that faithfully presents the content of [luongnv
 - **Dynamic sidebar**: Auto-generated from upstream content structure
 - **Automated sync**: Content pulled from upstream via git submodule every 6 hours
 - **CI/CD**: GitHub Actions builds and deploys to GitHub Pages
+- **Privacy-first analytics**: Self-hosted [Umami](https://umami.is/) — no cookies, no personal data collected
+
+## Visitor Stats
+
+![Today Visitors](https://img.shields.io/badge/dynamic/json?label=Today%20Visitors&query=%24.todayVisitors&url=https://raw.githubusercontent.com/ChHsiching/claude-howto-web/main/docs/stats.json&color=blue)
+![Total Visitors](https://img.shields.io/badge/dynamic/json?label=Total%20Visitors&query=%24.totalVisitors&url=https://raw.githubusercontent.com/ChHsiching/claude-howto-web/main/docs/stats.json&color=green)
 
 ## Quick Start
 
@@ -93,3 +99,7 @@ git commit -m "chore: update upstream submodule"
 ## License
 
 Content is from [luongnv89/claude-howto](https://github.com/luongnv89/claude-howto) (MIT License).
+
+## Privacy
+
+This site uses [Umami](https://umami.is/) for privacy-friendly analytics. No cookies are used, no personal data is collected, and all data is self-hosted. The tracker respects the Do Not Track browser setting. Fully compliant with GDPR, CCPA, and PECR.

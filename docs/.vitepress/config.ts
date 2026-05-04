@@ -14,6 +14,7 @@ export default withMermaid({
     ['meta', { name: 'color-scheme', content: 'light dark' }],
     ['link', { rel: 'icon', href: `${base}favicon-light.png`, media: '(prefers-color-scheme: light)' }],
     ['link', { rel: 'icon', href: `${base}favicon-dark.png`, media: '(prefers-color-scheme: dark)' }],
+    ['script', { defer: '', src: 'https://umami-seven-flax.vercel.app/script.js', 'data-website-id': '8c9a7463-d0c1-40d8-96c0-9239288abf68', 'data-do-not-track': 'true' }],
   ],
   title: 'Claude How-To',
   description: 'Master Claude Code in a Weekend',
