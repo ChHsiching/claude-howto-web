@@ -1,8 +1,25 @@
 🌐 **Language / 语言:** [English](README.md) | [中文](README.zh-CN.md)
 
-# claude-howto-web
+<div align="center">
 
-基于 VitePress 的静态站点，以 5 种语言忠实呈现 [luongnv89/claude-howto](https://github.com/luongnv89/claude-howto) 的内容。
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/logo/readme-light.png">
+  <source media="(prefers-color-scheme: light)" srcset="assets/logo/readme-dark.png">
+  <img alt="Claude How-To" width="180" src="assets/logo/readme-dark.png">
+</picture>
+
+**用一个周末掌握 Claude Code**
+
+基于 VitePress 的多语言静态站点，以 5 种语言忠实呈现 [luongnv89/claude-howto](https://github.com/luongnv89/claude-howto) 的内容。
+
+[![在线访问](https://img.shields.io/badge/在线-访问站点-8B5CF6?logo=github&logoColor=white)](https://chhsiching.github.io/claude-howto-web/)
+[![今日访问](https://img.shields.io/badge/dynamic/json?label=今日访问&query=%24.todayVisitors&url=https://raw.githubusercontent.com/ChHsiching/claude-howto-web/main/docs/stats.json&color=3B82F6)](https://github.com/ChHsiching/claude-howto-web)
+[![总访问量](https://img.shields.io/badge/dynamic/json?label=总访问量&query=%24.totalVisitors&url=https://raw.githubusercontent.com/ChHsiching/claude-howto-web/main/docs/stats.json&color=6366F1)](https://github.com/ChHsiching/claude-howto-web)
+[![隐私优先](https://img.shields.io/badge/分析-隐私优先-10B981?logo=umami&logoColor=white)](https://umami.is)
+
+</div>
+
+---
 
 ## 特性
 
@@ -10,6 +27,7 @@
 - **动态侧边栏**: 根据上游内容结构自动生成
 - **自动同步**: 通过 git submodule 每 6 小时从上游拉取内容
 - **CI/CD**: GitHub Actions 自动构建并部署到 GitHub Pages
+- **隐私优先分析**: 自建 [Umami](https://umami.is/) — 无 Cookie、不收集个人数据
 
 ## 快速开始
 
@@ -70,12 +88,18 @@ git commit -m "chore: update upstream submodule"
 - **智能构建**: 仅在上游有新提交时才同步和构建
 - 同步内容提交到 `develop`，然后合并到 `main`（触发部署）
 
+### 统计 (`update-stats.yml`)
+- **定时触发**: 每天上午 10:00 和晚上 22:00（北京时间）更新访问统计
+- **隐私保护**: 仅汇总自建 Umami 的路径级访问数据
+- 不会触发站点重新部署（`[skip ci]`）
+
 ## 项目结构
 
 ```
 ├── .github/workflows/
 │   ├── deploy.yml                # 部署到 GitHub Pages
-│   └── sync.yml                  # 上游同步（每 6 小时）
+│   ├── sync.yml                  # 上游同步（每 6 小时）
+│   └── update-stats.yml          # 访问统计（每日两次）
 ├── docs/
 │   ├── .vitepress/config.ts      # VitePress 配置（含 i18n）
 │   ├── .vitepress/sidebar.json   # 自动生成的侧边栏
@@ -85,7 +109,9 @@ git commit -m "chore: update upstream submodule"
 │   ├── zh/                       # 中文
 │   ├── uk/                       # 乌克兰语
 │   └── ja/                       # 日语
-├── scripts/sync-content.mjs      # 内容同步 + 侧边栏生成
+├── scripts/
+│   ├── sync-content.mjs          # 内容同步 + 侧边栏生成
+│   └── fetch-stats.mjs           # Umami API 统计获取
 ├── upstream/                     # git submodule（luongnv89/claude-howto）
 └── package.json
 ```
@@ -93,3 +119,7 @@ git commit -m "chore: update upstream submodule"
 ## 许可证
 
 内容来自 [luongnv89/claude-howto](https://github.com/luongnv89/claude-howto)（MIT 许可证）。
+
+## 隐私
+
+本站使用 [Umami](https://umami.is/) 进行隐私友好的访问分析。不使用 Cookie，不收集个人数据，所有数据自建托管。追踪器尊重浏览器的 Do Not Track 设置。完全符合 GDPR、CCPA 和 PECR。
