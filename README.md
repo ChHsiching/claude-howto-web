@@ -13,8 +13,8 @@
 A VitePress-powered multilingual site presenting [luongnv89/claude-howto](https://github.com/luongnv89/claude-howto) content in 5 languages.
 
 [![Live Site](https://img.shields.io/badge/Live-Site-8B5CF6?logo=github&logoColor=white)](https://chhsiching.github.io/claude-howto-web/)
-[![Today Visitors](https://img.shields.io/badge/dynamic/json?label=Today%20Visitors&query=%24.todayVisitors&url=https://raw.githubusercontent.com/ChHsiching/claude-howto-web/main/docs/stats.json&color=3B82F6)](https://github.com/ChHsiching/claude-howto-web)
-[![Total Visitors](https://img.shields.io/badge/dynamic/json?label=Total%20Visitors&query=%24.totalVisitors&url=https://raw.githubusercontent.com/ChHsiching/claude-howto-web/main/docs/stats.json&color=6366F1)](https://github.com/ChHsiching/claude-howto-web)
+[![Today Views](https://img.shields.io/badge/dynamic/json?label=Today%20Views&query=%24.todayViews&url=https://raw.githubusercontent.com/ChHsiching/claude-howto-web/main/docs/stats.json&color=3B82F6)](https://github.com/ChHsiching/claude-howto-web)
+[![Total Views](https://img.shields.io/badge/dynamic/json?label=Total%20Views&query=%24.totalViews&url=https://raw.githubusercontent.com/ChHsiching/claude-howto-web/main/docs/stats.json&color=6366F1)](https://github.com/ChHsiching/claude-howto-web)
 [![Privacy First](https://img.shields.io/badge/Analytics-Privacy%20First-10B981?logo=umami&logoColor=white)](https://umami.is)
 
 </div>
