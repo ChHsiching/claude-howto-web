@@ -13,8 +13,8 @@
 基于 VitePress 的多语言静态站点，以 5 种语言忠实呈现 [luongnv89/claude-howto](https://github.com/luongnv89/claude-howto) 的内容。
 
 [![在线访问](https://img.shields.io/badge/在线-访问站点-8B5CF6?logo=github&logoColor=white)](https://chhsiching.github.io/claude-howto-web/)
-[![今日访问](https://img.shields.io/badge/dynamic/json?label=今日访问&query=%24.todayVisitors&url=https://raw.githubusercontent.com/ChHsiching/claude-howto-web/main/docs/stats.json&color=3B82F6)](https://github.com/ChHsiching/claude-howto-web)
-[![总访问量](https://img.shields.io/badge/dynamic/json?label=总访问量&query=%24.totalVisitors&url=https://raw.githubusercontent.com/ChHsiching/claude-howto-web/main/docs/stats.json&color=6366F1)](https://github.com/ChHsiching/claude-howto-web)
+[![今日访问](https://img.shields.io/badge/dynamic/json?label=今日访问&query=%24.todayViews&url=https://raw.githubusercontent.com/ChHsiching/claude-howto-web/main/docs/stats.json&color=3B82F6)](https://github.com/ChHsiching/claude-howto-web)
+[![总访问量](https://img.shields.io/badge/dynamic/json?label=总访问量&query=%24.totalViews&url=https://raw.githubusercontent.com/ChHsiching/claude-howto-web/main/docs/stats.json&color=6366F1)](https://github.com/ChHsiching/claude-howto-web)
 [![隐私优先](https://img.shields.io/badge/分析-隐私优先-10B981?logo=umami&logoColor=white)](https://umami.is)
 
 </div>
