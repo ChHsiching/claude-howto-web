@@ -299,9 +299,9 @@ Claude Code の設定（`autoMemoryDirectory`、`claudeMdExcludes` などを含�
 |-------|------|--------|
 | 1（最高） | 管理ポリシー（システムレベル） | 組織全体への強制 |
 | 2 | `managed-settings.d/`（v2.1.83+） | モジュール式のポリシードロップイン、アルファベット順にマージ |
-| 3 | `~/.claude/settings.json` | ユーザー設定 |
+| 3 | `.claude/settings.local.json` | ローカルオーバーライド（git 無視） |
 | 4 | `.claude/settings.json` | プロジェクトレベル（git にコミット） |
-| 5（最低） | `.claude/settings.local.json` | ローカルオーバーライド（git 無視） |
+| 5（最低） | `~/.claude/settings.json` | ユーザー設定 |
 
 **プラットフォーム固有の設定（v2.1.51+）:**
 
@@ -311,7 +311,7 @@ Claude Code の設定（`autoMemoryDirectory`、`claudeMdExcludes` などを含�
 
 これらのプラットフォームネイティブの仕組みは JSON 設定ファイルとともに読み込まれ、同じ優先順位ルールに従う。
 
-> **注意（v2.1.119）**: `/config` の変更は `~/.claude/settings.json` に永続化されるようになった。`/config` で書かれた値は、上記のプロジェクト／ローカル／ポリシーの優先順位チェーンに参加する — もはやセッション限りではない。インタラクティブな編集には `/config` を、スクリプト化または管理された設定には `settings.json` ファイルの直接編集を使う。
+> **注意（v2.1.119）**: `/config` の変更は `~/.claude/settings.json` に永続化されるようになった。`/config` で書かれた値は、上記のポリシー／ローカル／プロジェクトの優先順位チェーンに参加する — もはやセッション限りではない。インタラクティブな編集には `/config` を、スクリプト化または管理された設定には `settings.json` ファイルの直接編集を使う。
 
 ### 保持期間とクリーンアップ設定
 
