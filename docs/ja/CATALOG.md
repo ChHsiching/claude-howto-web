@@ -129,11 +129,11 @@ Claude Code はツール使用の許可を制御する 6 つの権限モード�
 | `default` | ツール呼び出しごとに確認 | 標準的な対話利用 |
 | `acceptEdits` | ファイル編集を自動承認、それ以外は確認 | 信頼できる編集ワークフロー |
 | `plan` | 読み取り専用ツールのみ、書き込みなし | 計画と探索 |
-| `auto` | プロンプトなしですべてのツールを承認 | 完全自律動作（Research Preview） |
+| `auto` | バックグラウンドの安全分類器のチェック付きで全操作を許可 | 長時間タスク、確認プロンプトの削減 |
 | `bypassPermissions` | すべての権限チェックをスキップ | CI/CD、ヘッドレス環境 |
 | `dontAsk` | 権限が必要なツールをスキップ | 非対話スクリプト |
 
-> **注**：`auto` モードは Research Preview 機能（2026 年 3 月）。`bypassPermissions` は信頼されたサンドボックス環境でのみ利用すること。
+> **注**：`auto` モードは対象プラン・モデル・プロバイダの条件を満たす必要がある — [09-advanced-features/](../09-advanced-features/#auto-mode) を参照。`bypassPermissions` は信頼されたサンドボックス環境でのみ利用すること。
 
 **リファレンス**：[公式ドキュメント](https://code.claude.com/docs/en/permissions)
 
@@ -464,7 +464,7 @@ cp 02-memory/personal-CLAUDE.md ~/.claude/CLAUDE.md
 | **スケジュールタスク** | `/loop` および cron ツールで反復タスクを設定 | `/loop 5m /command` または CronCreate ツールを使う |
 | **Chrome 連携** | ヘッドレス Chromium によるブラウザ自動化 | `--chrome` フラグまたは `/chrome` コマンドを使う |
 | **キーバインドカスタマイズ** | コード対応を含むキーバインドのカスタマイズ | `/keybindings` を使うか `~/.claude/keybindings.json` を編集 |
-| **Auto Mode** | 権限プロンプトなしの完全自律動作（Research Preview） | `--mode auto` または `/permissions auto` を使う、2026 年 3 月 |
+| **Auto Mode** | バックグラウンドの安全分類器チェック付きで完全自律動作 | `Shift+Tab` で切り替え、または `--permission-mode auto` |
 | **チャンネル** | 複数チャネル通信（Telegram、Slack など）（Research Preview） | チャンネルプラグインを設定、2026 年 3 月 |
 | **音声入力** | プロンプトの音声入力 | マイクアイコンまたは音声キーバインドを使う |
 | **Agent フック種別** | シェルコマンド実行ではなくサブエージェントを生成するフック | フック設定で `"type": "agent"` を指定 |
