@@ -180,7 +180,7 @@ Claude Code は **28 種類のフックイベント** をサポートする。
 
 | イベント | 発火タイミング | マッチャー入力 | ブロック可否 | 用途例 |
 |----------|---------------|---------------|-------------|--------|
-| **SessionStart** | セッション開始/再開/clear/compact | startup/resume/clear/compact | 不可 | 環境セットアップ |
+| **SessionStart** | セッション開始/再開/clear/compact/fork | startup/resume/clear/compact/fork | 不可 | 環境セットアップ |
 | **InstructionsLoaded** | CLAUDE.md やルールファイルが読み込まれた後 | （なし） | 不可 | 指示の修正/フィルタ |
 | **UserPromptSubmit** | ユーザーがプロンプトを送信 | （なし） | 可 | プロンプト検証 |
 | **UserPromptExpansion** | ユーザープロンプトが展開（`@` メンション、スラッシュコマンド解決など） | （なし） | 可 | 展開後のプロンプトを変換/検査 |
@@ -353,7 +353,9 @@ Claude が応答を終えたとき（Stop）、サブエージェントが完了
 
 セッション開始または再開時に動作する。環境変数を永続化できる。
 
-**マッチャー：** `startup`、`resume`、`clear`、`compact`
+**マッチャー：** `startup`、`resume`、`clear`、`compact`、`fork`
+
+> **v2.1.214 の更新**: フォークされたセッションは、以前の `"resume"` ではなく `"fork"` をソースとして報告するようになった。
 
 **特別な機能：** `CLAUDE_ENV_FILE` を使って環境変数を永続化できる（`CwdChanged` と `FileChanged` フックでも利用可能）。
 
