@@ -220,7 +220,7 @@ claude --disallowedTools "Bash(rm -rf:*)" "Bash(git push --force:*)"
 | `--verbose` | 詳細ログを有効化 | | `claude --verbose` |
 | `--include-partial-messages` | ストリーミングイベントを含める | `stream-json` が必要 | `claude -p --output-format stream-json --include-partial-messages "query"` |
 | `--json-schema` | スキーマに沿って検証された JSON を取得 | | `claude -p --json-schema '{"type":"object"}' "query"` |
-| `--max-budget-usd` | プリントモードでの最大支出額 | | `claude -p --max-budget-usd 5.00 "query"` |
+| `--max-budget-usd` | プリントモードでの最大支出額。v2.1.217以降、上限に達するとバックグラウンドで実行中のサブエージェントも停止し、新規のサブエージェント起動も拒否される(以前はバックグラウンドエージェントは上限を超えても実行され続けていた) | | `claude -p --max-budget-usd 5.00 "query"` |
 
 ### 出力フォーマットの例
 
@@ -339,7 +339,7 @@ claude -r "feature-auth" --fork-session "test with different architecture"
 | `--channels` | MCP チャンネルプラグインを購読 | `claude --channels discord` |
 | `--tmux` | ワークツリー用に tmux セッションを作成 | `claude --tmux` |
 | `--fork-session` | 再開時に新しいセッション ID を作成 | `claude --resume abc --fork-session` |
-| `--max-budget-usd` | 最大支出額（プリントモード） | `claude -p --max-budget-usd 5.00 "query"` |
+| `--max-budget-usd` | 最大支出額（プリントモード）。上限に達するとバックグラウンドのサブエージェントも停止する (v2.1.217) | `claude -p --max-budget-usd 5.00 "query"` |
 | `--json-schema` | 検証付き JSON 出力 | `claude -p --json-schema '{"type":"object"}' "q"` |
 
 ### プラットフォームとテーマの注記（v2.1.112）
