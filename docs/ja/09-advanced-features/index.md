@@ -1901,7 +1901,7 @@ v2.1.83 以降、管理者は複数のマネージド設定ファイルを `mana
 ```json
 {
   "permissions": {
-    "mode": "default"
+    "defaultMode": "default"
   },
   "hooks": {
     "PreToolUse:Edit": "eslint --fix ${file_path}",
@@ -1924,7 +1924,7 @@ v2.1.83 以降、管理者は複数のマネージド設定ファイルを `mana
 ```json
 {
   "permissions": {
-    "mode": "default",
+    "defaultMode": "default",
     "allowedTools": ["Bash(git log:*)", "Read"],
     "disallowedTools": ["Bash(rm -rf:*)"]
   },
@@ -2031,7 +2031,7 @@ User: /config
     "PreToolUse": [{ "matcher": "Bash", "hooks": ["npm test && npm run lint"] }]
   },
   "permissions": {
-    "mode": "default"
+    "defaultMode": "default"
   },
   "mcp": {
     "servers": {
