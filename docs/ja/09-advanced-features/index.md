@@ -609,17 +609,14 @@ Claude: [Shows linter output from bg-5002]
 
 ### 設定
 
-```json
-{
-  "backgroundTasks": {
-    "enabled": true,
-    "maxConcurrentTasks": 5,
-    "notifyOnCompletion": true,
-    "autoCleanup": true,
-    "logOutput": true
-  }
-}
+`settings.json` にバックグラウンドタスク用のブロックは存在しない。この機能は環境変数で制御する：
+
+```bash
+# バックグラウンドタスクを完全に無効化する
+export CLAUDE_CODE_DISABLE_BACKGROUND_TASKS=true
 ```
+
+同時実行数もバックグラウンドタスクの設定ではない。同時に実行されるエージェント数は `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`（デフォルトは `20`）で決まる。
 
 ---
 
@@ -1040,7 +1037,7 @@ Claude Code は効率向上のためキーボードショートカットをサ�
 | `Ctrl+C` | 入力／生成のキャンセル |
 | `Ctrl+D` | Claude Code を終了 |
 | `Ctrl+G` | 計画を外部エディタで編集 |
-| `Ctrl+L` | ターミナル画面のクリア |
+| `Ctrl+L` | 画面の再描画（repaint のみ — 2 回押しでの `/clear` は v2.1.238 で廃止） |
 | `Ctrl+O` | 詳細出力の切り替え（推論を表示） |
 | `Ctrl+R` | 履歴の逆方向検索 |
 | `Ctrl+T` | タスクリストビューの切り替え |
@@ -1584,7 +1581,7 @@ Claude Code デスクトップアプリは、視覚的な diff レビュー、�
 
 ### デスクトップでの権限モード
 
-デスクトップアプリは CLI と同じ 4 つの権限モードをサポートする：
+デスクトップアプリは CLI と同じ権限モードをサポートする：
 
 | モード | 挙動 |
 |------|----------|
@@ -2108,8 +2105,8 @@ Claude Code および関連機能の詳細：
 
 ---
 
-**最終更新：** 2026 年 8 月 15 日
-**Claude Code バージョン：** 2.1.233
+**最終更新：** 2026 年 8 月 25 日
+**Claude Code バージョン：** 2.1.245
 **情報源：**
 - https://code.claude.com/docs/en/permission-modes
 - https://code.claude.com/docs/en/commands
