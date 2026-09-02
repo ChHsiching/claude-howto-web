@@ -21,9 +21,9 @@
 | **スキル** | バンドル 10 | 6 | 16 | [03-skills/](03-skills/) |
 | **プラグイン** | - | 3 | 3 | [07-plugins/](07-plugins/) |
 | **MCP サーバ** | 1 | 4 | 5 | [05-mcp/](05-mcp/) |
-| **フック** | 31 イベント | 9 | 40 | [06-hooks/](06-hooks/) |
+| **フック** | 33 イベント | 9 | 42 | [06-hooks/](06-hooks/) |
 | **メモリ** | 7 種類 | 3 | 10 | [02-memory/](02-memory/) |
-| **合計** | **115** | **42** | **157** | |
+| **合計** | **117** | **42** | **159** | |
 
 ---
 
@@ -281,7 +281,7 @@ cp -r 03-skills/* ~/.claude/skills/
 /plugin list              # インストール済みプラグイン一覧
 /plugin install <name>    # プラグインをインストール
 /plugin remove <name>     # プラグインを削除
-/plugin update <name>     # プラグインを更新
+claude plugin update <name>   # プラグインを更新（CLI。/plugin update というスラッシュ形式は説明文中で言及されるが、コマンドリファレンスには存在しない）
 ```
 
 ---
@@ -340,13 +340,18 @@ Claude Code のイベントでシェルコマンドを自動実行するイベ�
 | イベント | 説明 | 発火タイミング | ユースケース |
 |-------|-------------|----------------|-----------|
 | `SessionStart` | セッション開始・再開 | セッション初期化時 | セットアップタスク |
+| `Setup` | 初期環境セットアップ（セッションごとに 1 回） | 初回セッション起動時 | ツール準備、依存関係インストール |
 | `InstructionsLoaded` | 指示読み込み完了 | CLAUDE.md またはルールファイルの読込時 | カスタム指示の処理 |
 | `UserPromptSubmit` | プロンプト処理前 | ユーザーがメッセージ送信時 | 入力検証 |
+| `UserPromptExpansion` | プロンプト展開（@メンション、スラッシュコマンド解決） | 展開後、送信前 | 展開後プロンプトの変換・検査 |
 | `PreToolUse` | ツール実行前 | 任意のツールが走る前 | 検証、ログ |
 | `PermissionRequest` | 権限ダイアログ表示 | 機微な操作の前 | カスタム承認フロー |
+| `PermissionDenied` | ユーザーが権限要求を拒否 | 権限拒否後 | ログ、分析、ポリシー適用 |
 | `PostToolUse` | ツール成功後 | 任意のツール完了後 | 整形、通知 |
 | `PostToolUseFailure` | ツール実行失敗 | ツールエラー後 | エラー処理、ログ |
+| `PostToolBatch` | ツール実行バッチの完了後 | ツールバッチ終了時 | 集約レポート、バッチ検証 |
 | `Notification` | 通知送信 | Claude が通知送信時 | 外部アラート |
+| `MessageDisplay` | アシスタントのメッセージ表示時 | メッセージ描画中 | 表示テキストの変換・非表示 |
 | `SubagentStart` | サブエージェント生成 | サブエージェントタスク開始時 | サブエージェントコンテキスト初期化 |
 | `SubagentStop` | サブエージェント終了 | サブエージェントタスク完了時 | アクション連鎖 |
 | `Stop` | Claude が応答完了 | 応答完了時 | 後処理、レポート |
@@ -356,9 +361,12 @@ Claude Code のイベントでシェルコマンドを自動実行するイベ�
 | `TaskCreated` | TaskCreate でタスク作成（todo ツールが有効なときのみ発火 — Opus 4.8、Sonnet 5、Fable 5、Mythos 5 以降ではデフォルト無効。`CLAUDE_CODE_ENABLE_TODO_TOOLS=1` で復活） | 新タスク作成時 | タスク追跡、ログ |
 | `ConfigChange` | 設定更新 | 設定変更時 | 設定変更への対応 |
 | `CwdChanged` | 作業ディレクトリ変更 | ディレクトリ変更時 | ディレクトリ別セットアップ |
+| `DirectoryAdded` | セッション中に作業ディレクトリが追加登録 | `/add-dir` または SDK `register_repo_root` | 新規ディレクトリ向けツール設定 |
 | `FileChanged` | 監視ファイルの変更 | ファイル変更時 | ファイル監視、再ビルド |
 | `PreCompact` | コンパクト操作前 | コンテキスト圧縮時 | 状態保全 |
 | `PostCompact` | コンパクト完了後 | コンパクト完了時 | コンパクト後アクション |
+| `PreModelSwitch` | モデル切り替えの適用前 | モデル切り替え要求時 | モデル変更のゲート・拒否 |
+| `PostModelSwitch` | セッションのモデル変更後 | モデル切り替え完了時 | モデル変更のログ・連動 |
 | `WorktreeCreate` | ワークツリー作成中 | Git ワークツリー作成時 | ワークツリー環境セットアップ |
 | `WorktreeRemove` | ワークツリー削除中 | Git ワークツリー削除時 | ワークツリーリソースのクリーンアップ |
 | `Elicitation` | MCP サーバが入力を要求 | MCP elicitation 発生時 | 入力検証 |
@@ -529,11 +537,13 @@ chmod +x ~/.claude/hooks/*.sh
 
 ---
 
-**最終更新**：2026 年 8 月 25 日
-**Claude Code バージョン**：2.1.245
+**最終更新**：2026 年 9 月 2 日
+**Claude Code バージョン**：2.1.257
 **情報源**：
 - https://code.claude.com/docs/en/overview
 - https://code.claude.com/docs/en/commands
 - https://code.claude.com/docs/en/hooks
 - https://github.com/anthropics/claude-code/releases/tag/v2.1.118
-**互換モデル**：Claude Sonnet 4.6、Claude Opus 4.7、Claude Haiku 4.5
+- https://code.claude.com/docs/en/plugins-reference
+- https://code.claude.com/docs/en/discover-plugins
+**互換モデル**：Claude Fable 5、Claude Opus 5、Claude Sonnet 5、Claude Sonnet 4.6、Claude Opus 4.8、Claude Haiku 4.5
