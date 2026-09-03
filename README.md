@@ -118,7 +118,13 @@ git commit -m "chore: update upstream submodule"
 
 ## License
 
-Content is from [luongnv89/claude-howto](https://github.com/luongnv89/claude-howto) (MIT License).
+AGPL-3.0-only · Copyright (c) 2026 ChHsiching — see [LICENSE](LICENSE) — for this repository's site scaffolding and tooling. Use (including internal commercial use), modification, and distribution are free; distributing or offering as a network service requires derivative works to be open-sourced under AGPL-3.0. Closed-source commercial use requires a separate commercial license: hsichingchang@gmail.com
+
+Content is from [luongnv89/claude-howto](https://github.com/luongnv89/claude-howto) (MIT License) and remains under its upstream license.
+
+### Contribution Terms
+
+By submitting a PR, you agree to license your contribution under AGPL-3.0 and grant the maintainer the right to offer separate commercial licenses. Your contribution remains available to everyone under AGPL.
 
 ## Privacy
 
