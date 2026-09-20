@@ -357,7 +357,7 @@ export CLAUDE_CODE_EFFORT_LEVEL=xhigh
 - **プラン：** Team、Enterprise、または API（Pro や Max プランでは利用不可）
 - **モデル：** Claude Sonnet 4.6 または Opus 4.7
 - **プロバイダ：** Anthropic API のみ（Bedrock、Vertex、Foundry では非対応）
-- **分類器：** Claude Sonnet 4.6 上で動作する（追加のトークンコストが発生）
+- **分類器：** 追加のトークンコストが発生する。ただし Enterprise プランと Claude API アカウントでは、v2.1.278 以降サーバー側でチェックが実行され、課金されない
 
 ### オートモードの有効化
 
@@ -483,15 +483,14 @@ python3 09-advanced-features/setup-auto-mode-permissions.py --include-git-write 
 
 | カテゴリ | 例 |
 |----------|---------|
-| コア読み取り専用ツール | `Read(*)`、`Glob(*)`、`Grep(*)`、`Agent(*)`、`WebSearch(*)`、`WebFetch(*)` |
+| コア読み取り専用ツール | `Read(*)`、`Grep(*)`、`Agent(*)`、`WebSearch(*)`、`WebFetch(*)` |
 | ローカル検査 | `Bash(git status:*)`、`Bash(git log:*)`、`Bash(git diff:*)`、`Bash(cat:*)` |
-| オプションの編集 | `Edit(*)`、`Write(*)`、`NotebookEdit(*)` |
+| オプションの編集 | `Edit(*)` |
 | オプションのテスト／ビルド | `Bash(pytest:*)`、`Bash(python3 -m pytest:*)`、`Bash(cargo test:*)` |
-| オプションの Git 書き込み | `Bash(git add:*)`、`Bash(git commit:*)`、`Bash(git stash:*)` |
-| Git（ローカル書き込み） | `Bash(git add:*)`、`Bash(git commit:*)`、`Bash(git checkout:*)` |
-| パッケージマネージャ | `Bash(npm install:*)`、`Bash(pip install:*)`、`Bash(cargo build:*)` |
+| オプションの Git 書き込み | `Bash(git add:*)`、`Bash(git commit:*)`、`Bash(git checkout:*)`、`Bash(git switch:*)`、`Bash(git stash:*)`、`Bash(git tag:*)` |
+| パッケージマネージャ | `Bash(npm ci:*)`、`Bash(npm install:*)`、`Bash(pip install:*)`、`Bash(pip3 install:*)` |
 | ビルドとテスト | `Bash(make:*)`、`Bash(pytest:*)`、`Bash(go test:*)` |
-| よく使うシェル | `Bash(ls:*)`、`Bash(cat:*)`、`Bash(find:*)`、`Bash(cp:*)`、`Bash(mv:*)` |
+| よく使うシェル | `Bash(ls:*)`、`Bash(cat:*)`、`Bash(find:*)` |
 | GitHub CLI | `Bash(gh pr view:*)`、`Bash(gh pr create:*)`、`Bash(gh issue list:*)` |
 
 危険な操作（`rm -rf`、`sudo`、強制プッシュ、`DROP TABLE`、`terraform destroy` など）は意図的に除外されている。スクリプトは冪等であり、2 回実行してもルールは重複しない。
@@ -2105,9 +2104,11 @@ Claude Code および関連機能の詳細：
 
 ---
 
-**最終更新：** 2026 年 8 月 25 日
-**Claude Code バージョン：** 2.1.245
+**最終更新：** 2026 年 9 月 19 日
+**Claude Code バージョン：** 2.1.278
 **情報源：**
+- https://code.claude.com/docs/en/permissions
+- https://code.claude.com/docs/en/auto-mode-classifier-billing
 - https://code.claude.com/docs/en/permission-modes
 - https://code.claude.com/docs/en/commands
 - https://code.claude.com/docs/en/interactive-mode
