@@ -137,7 +137,7 @@ Show concrete examples of using this Skill.
 ### 推奨フィールド
 
 - **description**（推奨）: スキルが何をするかと、いつ使うか。省略した場合、Claude Code は markdown 本文の最初の段落を使用する。`description` と `when_to_use` を合わせたテキストはスキル一覧で **1,536 文字**で切り詰められる（`skillListingMaxDescChars` で変更可能）。Claude がスキルを発火させるべきタイミングを判断する際に照合するのはこのテキストである。
-- **name**（任意）: 既定ではスキルの**ディレクトリ名**が使われる。指定した場合は表示名となり、小文字・数字・ハイフンのみ（最大 64 文字）。Claude Code では `anthropic-skills` と `synced` が予約されており、プラグイン外では読み込まれない。"anthropic" や "claude" を含められないというより厳しい制限は、claude.ai や Skills API にアップロードするスキルに適用される。プラグインのスキルでは、`name` はコマンドの最後のセグメントも決定する。
+- **name**（任意）: 既定ではスキルの**ディレクトリ名**が使われる。指定した場合は表示名となり、小文字・数字・ハイフンのみ（最大 64 文字）が推奨される移植性のある形式である（claude.ai と Skills API では必須）。Claude Code 自体（v2.1.299+）は、名前に不可視文字・文字方向を変える文字・空白に見える文字、`<` や `>` を含むか、256 文字を超えるスキルやコマンドを、名前を変更するまでスキップする。Claude Code では `anthropic-skills` と `synced` が予約されており、プラグイン外では読み込まれない。"anthropic" や "claude" を含められないというより厳しい制限は、claude.ai や Skills API にアップロードするスキルに適用される。プラグインのスキルでは、`name` はコマンドの最後のセグメントも決定する。
 
 SKILL.md のフロントマターのフィールドはすべて任意であり、推奨されるのは `description` だけである。
 
@@ -150,13 +150,13 @@ description: What this skill does and when to use it
 argument-hint: "[filename] [format]"        # 自動補完用ヒント
 disable-model-invocation: true              # ユーザーのみ呼び出し可
 user-invocable: false                       # スラッシュメニューから非表示
-allowed-tools: Read, Grep, Glob             # ツールアクセスの制限
+allowed-tools: Read, Grep, Glob             # スキル実行中はこれらのツールを事前承認（許可プロンプトなし）
 model: opus                                 # 使用するモデルの指定
 effort: high                                # 努力レベルの上書き（low, medium, high, max）
 context: fork                               # 隔離されたサブエージェントで実行
 agent: Explore                              # エージェントタイプ（context: fork と併用）
 shell: bash                                 # コマンドのシェル: bash（既定）または powershell
-hooks:                                      # スキルスコープのフック
+hooks:                                      # スキル呼び出し時に登録されるフック
   PreToolUse:
     - matcher: "Bash"
       hooks:
@@ -168,7 +168,7 @@ paths: "src/api/**/*.ts"               # スキルの発火を制限する glob 
 
 | フィールド | 説明 |
 |-------|-------------|
-| `name` | 小文字、数字、ハイフンのみ（最大 64 文字）。Claude Code では `anthropic-skills` と `synced` が予約されている。 |
+| `name` | 推奨（移植性あり）: 小文字、数字、ハイフンのみ（最大 64 文字）。Claude Code では `anthropic-skills` と `synced` が予約されている。 |
 | `description` | スキルが何をするかと、いつ使うか。`description` と `when_to_use` を合わせたテキストはスキル一覧で 1,536 文字で切り詰められる（`skillListingMaxDescChars` で変更可能）。自動呼び出しのマッチングに重要。 |
 | `when_to_use` | Claude がスキルを呼び出すべきタイミングに関する補足情報。スキル一覧では `description` の後ろに連結され、1,536 文字の上限に算入される。 |
 | `argument-hint` | `/` の自動補完メニューに表示されるヒント（例: `"[filename] [format]"`）。 |
@@ -180,7 +180,7 @@ paths: "src/api/**/*.ts"               # スキルの発火を制限する glob 
 | `context` | `fork` を指定するとスキルを独自のコンテキストウィンドウを持つフォーク済みサブエージェントコンテキストで実行する。 |
 | `agent` | `context: fork` の際のサブエージェントタイプ（例: `Explore`, `Plan`, `general-purpose`）。 |
 | `shell` | `` !`command` `` 置換とスクリプトに使うシェル: `bash`（既定）または `powershell`。 |
-| `hooks` | このスキルのライフサイクルにスコープされたフック（グローバルフックと同じ形式）。 |
+| `hooks` | スキル呼び出し時に登録されるフック（settings のフックと同じ形式。任意のイベント）。登録後はセッションの残りの間ずっと有効。 |
 | `paths` | スキルが自動発火する条件を制限する glob パターン。カンマ区切り文字列または YAML リスト。パス固有ルールと同じ形式。 |
 
 ## スキルのコンテンツの種類
@@ -267,6 +267,8 @@ Fix GitHub issue $ARGUMENTS following our coding standards.
 ## 動的コンテキストの注入
 
 `` !`command` `` 構文は、スキルコンテンツが Claude に送信される前にシェルコマンドを実行する。
+
+> **注記（v2.1.299）**: `UserPromptSubmit` フックはコマンドが展開される前に実行されるため、プロンプトをブロックするフックはこれらの `!` コマンドの実行も止める。
 
 ```yaml
 ---
@@ -496,11 +498,11 @@ description: Create or update CLAUDE.md files following best practices for optim
 
 ## Core Principles
 
-**LLMs are stateless**: CLAUDE.md is the only file automatically included in every conversation.
+**LLMs are stateless**: CLAUDE.md is the main project file loaded into every conversation (alongside auto memory and unscoped rules).
 
 ### The Golden Rules
 
-1. **Less is More**: Keep under 300 lines (ideally under 100)
+1. **Less is More**: Keep each CLAUDE.md under 200 lines
 2. **Universal Applicability**: Only include information relevant to EVERY session
 3. **Don't Use Claude as a Linter**: Use deterministic tools instead
 4. **Never Auto-Generate**: Craft it manually with careful consideration
@@ -823,11 +825,18 @@ chmod +x ~/.claude/skills/my-skill/scripts/*.py
 - [フックガイド](../06-hooks/) - イベント駆動の自動化
 
 ---
-**最終更新**: 2026 年 10 月 10 日
-**Claude Code バージョン**: 2.1.296
+**最終更新**: 2026 年 10 月 15 日
+**Claude Code バージョン**: 2.1.300
 **情報源**:
 - https://code.claude.com/docs/en/skills
 - https://code.claude.com/docs/en/settings
 - https://code.claude.com/docs/en/changelog
 - https://code.claude.com/docs/en/settings-reference
+- https://code.claude.com/docs/en/hooks#hooks-in-skills-and-agents
+- https://code.claude.com/docs/en/skills#characters-a-skill-name-cant-hold
+- https://code.claude.com/docs/en/hooks#hook-lifecycle
+- https://code.claude.com/docs/en/changelog#2-1-299
+- https://code.claude.com/docs/en/skills#pre-approve-tools-for-a-skill
+- https://code.claude.com/docs/en/memory#write-effective-instructions
+- https://code.claude.com/docs/en/memory
 **対応モデル**: Claude Fable 5, Claude Opus 5, Claude Sonnet 5, Claude Sonnet 4.6, Claude Opus 4.8, Claude Haiku 4.5

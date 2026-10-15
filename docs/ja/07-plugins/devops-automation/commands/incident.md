@@ -3,7 +3,6 @@
 <!-- i18n-date: 2026-04-27 -->
 
 ---
-name: Incident Response
 description: 構造化された手順で本番インシデントに対応する
 ---
 
@@ -18,3 +17,11 @@ description: 構造化された手順で本番インシデントに対応する
 5. 対応活動を統率
 6. 解決内容をドキュメント化
 7. ポストモーテムを設定
+
+---
+
+**最終更新**: 2026 年 10 月 15 日
+**Claude Code バージョン**: 2.1.300
+**出典**:
+- https://code.claude.com/docs/en/plugins
+- https://code.claude.com/docs/en/skills#frontmatter-reference

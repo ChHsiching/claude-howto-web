@@ -3,7 +3,6 @@
 <!-- i18n-date: 2026-04-27 -->
 
 ---
-name: Generate README
 description: プロジェクト README を作成または更新する
 ---
 
@@ -17,3 +16,11 @@ description: プロジェクト README を作成または更新する
 4. API ドキュメントへのリンク
 5. コントリビューションガイドライン
 6. ライセンス情報
+
+---
+
+**最終更新**: 2026 年 10 月 15 日
+**Claude Code バージョン**: 2.1.300
+**出典**:
+- https://code.claude.com/docs/en/plugins
+- https://code.claude.com/docs/en/skills#frontmatter-reference

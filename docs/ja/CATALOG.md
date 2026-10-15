@@ -20,10 +20,10 @@
 | **サブエージェント** | 6 | 9 | 15 | [04-subagents/](04-subagents/) |
 | **スキル** | バンドル 10 | 6 | 16 | [03-skills/](03-skills/) |
 | **プラグイン** | - | 3 | 3 | [07-plugins/](07-plugins/) |
-| **MCP サーバ** | 1 | 4 | 5 | [05-mcp/](05-mcp/) |
+| **MCP サーバ** | - | 4 | 4 | [05-mcp/](05-mcp/) |
 | **フック** | 33 イベント | 9 | 42 | [06-hooks/](06-hooks/) |
 | **メモリ** | 7 種類 | 3 | 10 | [02-memory/](02-memory/) |
-| **合計** | **117** | **42** | **159** | |
+| **合計** | **116** | **42** | **158** | |
 
 ---
 
@@ -57,7 +57,7 @@
 | `/proactive` | `/loop` のエイリアス（v2.1.105） | `/loop` と同じ |
 | `/recap` | セッションに戻ってきたときに要約を表示 | 離席後のコンテキスト把握 |
 | `/rewind` | チェックポイントへ巻き戻し | 変更取消、別案探索 |
-| `/checkpoint` | チェックポイント管理 | 状態の保存 / 復元 |
+| `/checkpoint` | `/rewind` のエイリアス | `/rewind` と同じ |
 | `/cost` | `/usage` のコストタブを開くエイリアス（v2.1.118+） | 支出監視 |
 | `/context` | コンテキストウィンドウ使用量を表示 | 会話長の管理 |
 | `/export` | 会話をエクスポート | 参照用に保存 |
@@ -71,10 +71,8 @@
 | `/release-notes` | リリースノートを表示 | 新機能の確認 |
 | `/remote-control` | リモートコントロールを有効化 | リモートアクセス |
 | `/permissions` | 権限を管理 | アクセス制御 |
-| `/session` | セッションを管理 | マルチセッションワークフロー |
 | `/rename` | 現在のセッションを改名 | セッション整理 |
 | `/resume` | 過去のセッションを再開 | 作業の継続 |
-| `/todo` | TODO リストを表示・管理 | タスク追跡 |
 | `/tui` | フルスクリーン TUI（テキストユーザーインターフェース）モード切替 | フルスクリーン / tmux でのちらつきのない描画 |
 | `/tasks` | バックグラウンドタスクを表示 | 非同期処理の監視 |
 | `/copy` | 直前の応答をクリップボードにコピー | 出力の素早い共有 |
@@ -89,7 +87,7 @@
 | `/stickers` | セッションステッカーを表示 | 楽しいご褒美 |
 | `/fast` | 高速出力モード切替 | 応答の高速化 |
 | `/terminal-setup` | ターミナル統合を設定 | ターミナル機能のセットアップ |
-| `/undo` | **公式ドキュメントに記載なし** — v2.1.108 で `/rewind` のエイリアスとして追加されたが、公式のコマンドリファレンスには一切登場しない | 代わりに `/rewind`（または `Esc Esc`）を使う |
+| `/undo` | `/rewind` のエイリアス（v2.1.108） | `/rewind` と同じ |
 | `/upgrade` | アップデート確認 | バージョン管理 |
 | `/team-onboarding` | このプロジェクトの Claude Code 利用状況からオンボーディングガイドを生成 | 新メンバーのオンボーディング（v2.1.101） |
 | `/code-review ultra` | 現在の変更に対するクラウドのマルチエージェントコードレビューを実行。`/ultrareview` はエイリアスとして残っており、`/code-review ultra` が推奨の呼び出し。Pro と Max では 3 回まで無料、以降は使用クレジットが必要 | マージ前の深いマルチエージェントレビュー（v2.1.112） |
@@ -127,7 +125,7 @@ Claude Code はツール使用の許可を制御する 6 つの権限モード�
 |------|-------------|-------------|
 | `default` | ツール呼び出しごとに確認 | 標準的な対話利用 |
 | `acceptEdits` | ファイル編集を自動承認、それ以外は確認 | 信頼できる編集ワークフロー |
-| `plan` | 読み取り専用ツールのみ、書き込みなし | 計画と探索 |
+| `plan` | 調査して計画を提案。承認するまでソースは編集しない | 計画と探索 |
 | `auto` | バックグラウンドの安全分類器のチェック付きで全操作を許可 | 長時間タスク、確認プロンプトの削減 |
 | `bypassPermissions` | すべての権限チェックをスキップ | CI/CD、ヘッドレス環境 |
 | `dontAsk` | 権限が必要なツールをスキップ | 非対話スクリプト |
@@ -159,10 +157,10 @@ Claude Code はツール使用の許可を制御する 6 つの権限モード�
 |-------|------|-------------|
 | `name` | 文字列 | エージェント識別子 |
 | `description` | 文字列 | エージェントの役割 |
-| `model` | 文字列 | モデル上書き（例：`haiku-4.5`） |
+| `model` | 文字列 | モデル上書き（`sonnet`、`opus`、`haiku`、`fable`、完全なモデル ID、または `inherit`） |
 | `tools` | 配列 | 許可ツール一覧 |
-| `effort` | 文字列 | 推論努力レベル（`low`、`medium`、`high`） |
-| `initialPrompt` | 文字列 | エージェント開始時に注入されるシステムプロンプト |
+| `effort` | 文字列 | 努力レベル（`low`、`medium`、`high`、`xhigh`、`max`。モデルにより異なる） |
+| `initialPrompt` | 文字列 | エージェントをメインセッションのエージェントとして実行したとき（`--agent`）に自動送信される最初のユーザーターン |
 | `disallowedTools` | 配列 | 当エージェントに明示的に禁止するツール |
 
 ### カスタムサブエージェント（例）
@@ -224,9 +222,9 @@ cp 04-subagents/*.md .claude/agents/
 |-------|------|-------------|
 | `name` | 文字列 | スキル表示名 |
 | `description` | 文字列 | スキルの役割 |
-| `autoInvoke` | 配列 | 自動起動のトリガーフレーズ |
-| `effort` | 文字列 | 推論努力レベル（`low`、`medium`、`high`） |
-| `shell` | 文字列 | スクリプト実行に使うシェル（`bash`、`zsh`、`sh`） |
+| `when_to_use` | 文字列 | `description` に追記されるトリガーフレーズやリクエスト例 |
+| `effort` | 文字列 | 努力レベル（`low`、`medium`、`high`、`xhigh`、`max`。モデルにより異なる） |
+| `shell` | 文字列 | インラインの `` !`command` `` ブロックで使うシェル（既定は `bash`、または `powershell`） |
 
 **リファレンス**：[03-skills/](03-skills/) | [公式ドキュメント](https://code.claude.com/docs/en/skills)
 
@@ -302,7 +300,7 @@ claude plugin update <name>   # プラグインを更新（CLI。/plugin update 
 | **Asana** | プロジェクト管理 | タスク追跡 | プロジェクト | 設定で構成 |
 | **Stripe** | 決済データ | 財務分析 | プロジェクト | 設定で構成 |
 | **Memory** | 永続メモリ | セッション横断の想起 | ユーザー | 設定で構成 |
-| **Context7** | ライブラリドキュメント | 最新ドキュメント検索 | 組み込み | 組み込み |
+| **Context7** | ライブラリドキュメント | 最新ドキュメント検索 | ユーザー | 設定で構成（サードパーティ製サーバ） |
 
 > **スコープ**：`プロジェクト` = チーム（`.mcp.json`）、`ユーザー` = 個人（`~/.claude.json`）、`組み込み` = プリインストール
 
@@ -340,10 +338,10 @@ Claude Code のイベントでシェルコマンドを自動実行するイベ�
 | イベント | 説明 | 発火タイミング | ユースケース |
 |-------|-------------|----------------|-----------|
 | `SessionStart` | セッション開始・再開 | セッション初期化時 | セットアップタスク |
-| `Setup` | 初期環境セットアップ（セッションごとに 1 回） | 初回セッション起動時 | ツール準備、依存関係インストール |
+| `Setup` | リポジトリのセットアップまたはメンテナンス実行 | `--init-only`、または `-p` と併用した `--init`/`--maintenance` の場合のみ | ツール準備、依存関係インストール |
 | `InstructionsLoaded` | 指示読み込み完了 | CLAUDE.md またはルールファイルの読込時 | カスタム指示の処理 |
 | `UserPromptSubmit` | プロンプト処理前 | ユーザーがメッセージ送信時 | 入力検証 |
-| `UserPromptExpansion` | プロンプト展開（@メンション、スラッシュコマンド解決） | 展開後、送信前 | 展開後プロンプトの変換・検査 |
+| `UserPromptExpansion` | 入力したスラッシュコマンド（スキル、カスタムコマンド、MCP プロンプト）がプロンプトに展開される | `UserPromptSubmit` の後、展開後プロンプトが Claude に届く前 | `/command` の直接使用をブロック、スキルごとのコンテキスト追加、コマンドのログ記録 |
 | `PreToolUse` | ツール実行前 | 任意のツールが走る前 | 検証、ログ |
 | `PermissionRequest` | 権限ダイアログ表示 | 機微な操作の前 | カスタム承認フロー |
 | `PermissionDenied` | ユーザーが権限要求を拒否 | 権限拒否後 | ログ、分析、ポリシー適用 |
@@ -454,11 +452,11 @@ cp 02-memory/personal-CLAUDE.md ~/.claude/CLAUDE.md
 | **/proactive** | `/loop` のエイリアス — 同じ反復タスク動作（v2.1.105） | `/proactive` を `/loop` と互換に利用 |
 | **/recap** | 既存セッションに戻ったときに要約を表示（v2.1.108） | 離席後に `/recap` を実行して文脈を取り戻す |
 | **/tui** | フルスクリーン TUI モードを切替してちらつきのない描画（v2.1.110） | フルスクリーンターミナルや tmux で `/tui` を使う |
-| **/undo** | **公式ドキュメントに記載なし** — v2.1.108 で `/rewind` のエイリアスとして追加されたが、公式のコマンドリファレンスには一切登場しない | 代わりに `/rewind`（または `Esc Esc`）を使う |
+| **/undo** | `/rewind` のエイリアス（v2.1.108） | `/undo`、`/checkpoint`、`/rewind` のどれでも同じように使える |
 | **Monitor ツール** | バックグラウンドコマンドの stdout を監視し、ポーリングではなくイベントで反応（v2.1.98+） | [高度な機能](09-advanced-features/) 経由で Monitor ツールを利用 |
 | **/team-onboarding** | プロジェクトの Claude Code 設定からオンボーディングガイドを自動生成（v2.1.101） | プロジェクトで `/team-onboarding` を実行 |
 | **リモートコントロール** | API 経由で Claude Code セッションを遠隔制御 | リモートコントロール API でプロンプト送信と応答取得をプログラム的に行う |
-| **Web セッション** | ブラウザベース環境で Claude Code を実行 | `claude web` または Anthropic Console でアクセス |
+| **Web セッション** | クラウドセッションで Claude Code を実行 | `claude --cloud "task"` または claude.ai/code で開始 |
 | **デスクトップアプリ** | Claude Code のネイティブデスクトップアプリ | `/desktop` または Anthropic サイトからダウンロード |
 | **Agent Teams** | 関連タスクで複数エージェントを協調 | コラボレーションと文脈共有を行う teammate エージェントを設定 |
 | **タスクリスト** | バックグラウンドタスクの管理と監視 | `/tasks` でバックグラウンド処理を表示・管理 |
@@ -468,7 +466,7 @@ cp 02-memory/personal-CLAUDE.md ~/.claude/CLAUDE.md
 | **MCP OAuth** | MCP サーバ向け OAuth 認証 | 安全なアクセスのため MCP サーバ設定で OAuth 認証情報を構成 |
 | **MCP ツール検索** | MCP ツールを動的に検索・発見 | 接続済みサーバ全体で利用可能な MCP ツールを検索 |
 | **スケジュールタスク** | `/loop` および cron ツールで反復タスクを設定 | `/loop 5m /command` または CronCreate ツールを使う |
-| **Chrome 連携** | ヘッドレス Chromium によるブラウザ自動化 | `--chrome` フラグまたは `/chrome` コマンドを使う |
+| **Chrome 連携** | Claude in Chrome 拡張機能経由で自分の Chrome/Edge を操作（表示されるウィンドウ、自分のログイン状態） | `--chrome` フラグまたは `/chrome` コマンドを使う |
 | **キーバインドカスタマイズ** | コード対応を含むキーバインドのカスタマイズ | `/keybindings` を使うか `~/.claude/keybindings.json` を編集 |
 | **Auto Mode** | バックグラウンドの安全分類器チェック付きで完全自律動作 | `Shift+Tab` で切り替え、または `--permission-mode auto` |
 | **チャンネル** | 複数チャネル通信（Telegram、Slack など）（Research Preview） | チャンネルプラグインを設定、2026 年 3 月 |
@@ -537,8 +535,8 @@ chmod +x ~/.claude/hooks/*.sh
 
 ---
 
-**最終更新**：2026 年 10 月 10 日
-**Claude Code バージョン**：2.1.296
+**最終更新**：2026 年 10 月 15 日
+**Claude Code バージョン**：2.1.300
 **情報源**：
 - https://code.claude.com/docs/en/tools-reference#task-tool-availability
 - https://code.claude.com/docs/en/overview
@@ -548,4 +546,9 @@ chmod +x ~/.claude/hooks/*.sh
 - https://code.claude.com/docs/en/plugins-reference
 - https://code.claude.com/docs/en/discover-plugins
 - https://code.claude.com/docs/en/sub-agents
+- https://code.claude.com/docs/en/permission-modes
+- https://code.claude.com/docs/en/cli-reference
+- https://code.claude.com/docs/en/skills
+- https://code.claude.com/docs/en/mcp
+- https://code.claude.com/docs/en/chrome
 **互換モデル**：Claude Fable 5、Claude Opus 5、Claude Sonnet 5、Claude Sonnet 4.6、Claude Opus 4.8、Claude Haiku 4.5

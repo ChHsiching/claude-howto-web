@@ -1,8 +1,14 @@
 #!/bin/bash
 # イベント発生時に通知を送信する
-# フック：PostToolUse（matcher: Bash）— bash コマンドの後に実行し、スクリプト側で git push を判別する
+# フック：PostToolUse（matcher: Bash）— すべての Bash 呼び出しの後に実行され、コマンドが git push でなければスクリプトは終了する
 # 注：Claude Code にネイティブの PostPush イベントは無い。git push をトリガにするには、
 # matcher または本スクリプト内の条件で bash コマンド文字列に "git push" が含まれるかを確認する。
+
+# フック入力を読み取り、Bash コマンドが git push でなければ終了する
+INPUT=$(cat)
+# コマンド文字列を取り出し（\"msg\" のようなエスケープされた引用符も含む）、その中のどこかにある "git push" をコマンド語として照合する
+COMMAND=$(echo "$INPUT" | sed -nE 's/.*"command"[[:space:]]*:[[:space:]]*"(([^"\\]|\\.)*)".*/\1/p' | head -1)
+printf '%s\n' "$COMMAND" | grep -qE '(^|[^[:alnum:]_-]|\\n)git[[:space:]]+push([^[:alnum:]_-]|$)' || exit 0
 
 REPO_NAME=$(basename $(git rev-parse --show-toplevel 2>/dev/null) 2>/dev/null)
 COMMIT_MSG=$(git log -1 --pretty=%B 2>/dev/null)

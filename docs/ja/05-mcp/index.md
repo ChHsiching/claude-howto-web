@@ -245,7 +245,7 @@ MCP サーバーはインタラクティブダイアログを介してユーザ�
 
 ## ツール説明と指示の上限
 
-v2.1.84 以降、Claude Code は MCP サーバーごとのツール説明と指示に **2 KB の上限** を強制する。これは個々のサーバーが冗長すぎるツール定義でコンテキストを過剰に消費するのを防ぎ、コンテキストの肥大化を抑え、対話を効率的に保つ。v2.1.296 以降、最初から送信される説明とサーバーの指示のデフォルト上限は **4,096 文字** になり (v2.1.296)、Claude が tool search 経由で読み込む説明は **16,384 文字** で切り詰められる (v2.1.295)。
+Claude Code は、冗長なサーバーがコンテキストを肥大化させないよう、MCP ツールの説明と各サーバーの指示を切り詰める。デフォルトの上限は、サーバーの指示と最初から読み込まれるツールの説明が **4,096 文字**（v2.1.296。それ以前は v2.1.84 から 2,048 文字）、Claude が tool search 経由で読み込む説明が **16,384 文字**（v2.1.295）である。v2.1.280 以降は `CLAUDE_CODE_MAX_MCP_DESCRIPTION_LENGTH` で上書きでき、設定した数値が **両方** の上限を置き換える（`8192` なら短い方の上限は上がり、長い方は下がる）。v2.1.299 以降、`api.anthropic.com` にある Anthropic のファーストパーティ MCP サーバーの説明と指示は切り詰めずに Claude に届く。重要な情報は説明の冒頭近くに置くこと。
 
 ## MCP プロンプトをスラッシュコマンドとして利用
 
@@ -449,7 +449,7 @@ MCP 設定は環境変数の展開とフォールバックデフォルトをサ�
 ```
 
 変数は実行時に展開される。
-- `${VAR}` - 環境変数を使用、未設定ならエラー
+- `${VAR}` - 環境変数を使用。未設定（かつデフォルトなし）の場合もサーバーはリテラルの `${VAR}` のまま読み込まれ、`claude mcp list` と `/mcp` が変数の欠落を警告する
 - `${VAR:-default}` - 環境変数を使用、未設定なら default にフォールバック
 
 ### 例 2：Database MCP のセットアップ
@@ -1165,8 +1165,8 @@ export GITHUB_TOKEN="your_token"
 
 ---
 
-**最終更新：** 2026 年 10 月 10 日
-**Claude Code バージョン：** 2.1.296
+**最終更新：** 2026 年 10 月 15 日
+**Claude Code バージョン：** 2.1.300
 **情報源：**
 - https://code.claude.com/docs/en/mcp
 - https://code.claude.com/docs/en/mcp#configure-tool-search
@@ -1175,4 +1175,6 @@ export GITHUB_TOKEN="your_token"
 - https://github.com/anthropics/claude-code/releases/tag/v2.1.117
 - https://github.com/anthropics/claude-code/releases/tag/v2.1.285
 - https://github.com/anthropics/claude-code/releases/tag/v2.1.296
+- https://code.claude.com/docs/en/mcp#tool-search-for-mcp-server-authors
+- https://code.claude.com/docs/en/mcp#environment-variable-expansion-in-mcp-json
 **対応モデル：** Claude Sonnet 4.6、Claude Opus 4.7、Claude Haiku 4.5

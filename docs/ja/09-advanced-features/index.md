@@ -517,10 +517,8 @@ User: Run tests in background
 
 Claude: Started task bg-1234
 
-/task list           # Show all tasks
-/task status bg-1234 # Check progress
-/task show bg-1234   # View output
-/task cancel bg-1234 # Cancel task
+/tasks    # View and manage background work (shells and subagents); stop a task from here
+Ctrl+B    # Move a running Bash command or agent to the background
 ```
 
 ### バックグラウンドタスクの起動
@@ -542,44 +540,19 @@ Claude: [Works on auth module while tests run in background]
 Claude: 📢 Background task bg-1234 completed:
 ✅ 245 tests passed
 ❌ 3 tests failed
-View results: /task show bg-1234
+View results: /tasks
 ```
 
 ### バックグラウンドタスクの管理
 
-**実行中タスクの一覧：**
-```
-User: /task list
+`/tasks`（エイリアス `/bashes`）を実行すると、実行中のシェルとサブエージェントを一覧表示し、1 つを開いて出力を確認したり、停止したりできる。`/task` のサブコマンドは存在しない。
 
-Active background tasks:
-1. [bg-1234] Running tests (50% complete, 2min remaining)
-2. [bg-1235] Building Docker image (25% complete, 8min remaining)
-3. [bg-1236] Deploying to staging (90% complete, 30sec remaining)
-```
+```text
+User: /tasks
 
-**タスクの状態確認：**
-```
-User: /task status bg-1234
-
-Task bg-1234: Running tests
-Status: In progress
-Progress: 120/245 tests (49%)
-Started: 2025-11-08 10:30:15
-Estimated completion: 2025-11-08 10:34:22
-```
-
-**タスク出力の表示：**
-```
-User: /task show bg-1234
-
-[Shows live output from the test run]
-```
-
-**タスクのキャンセル：**
-```
-User: /task cancel bg-1234
-
-Cancelled background task bg-1234
+[Opens the background-work view: running shells and subagents,
+ including subagents that have finished. Select one to see its
+ output, or stop it from here.]
 ```
 
 ### 例：並列開発
@@ -1430,8 +1403,8 @@ claude remote-control --name "Auth Refactor"
 |------|-------------|
 | `--name "title"` | 識別しやすいセッションタイトル |
 | `--verbose` | 詳細な接続ログを表示 |
-| `--sandbox` | ファイルシステムとネットワークの隔離を有効化 |
-| `--no-sandbox` | サンドボックスを無効化（デフォルト） |
+
+> **注意（v2.1.300）：** `claude remote-control` は `--sandbox` と `--no-sandbox` を受け付けなくなった（もともと効果はなく、どちらかを渡すとエラーで終了する）。Remote Control セッションをサンドボックス化するには、設定ファイルで `sandbox.enabled` を設定する。
 
 ### セッションへの接続
 
@@ -1458,9 +1431,9 @@ claude remote-control --name "Auth Refactor"
 
 ### 制限
 
-- Claude Code インスタンスごとにリモートセッションは 1 つ
+- 対話型 Claude Code プロセスごとにリモートセッションは 1 つ — サーバーモード（`claude remote-control`）は複数を同時に扱える（`--capacity`、デフォルト 32）
 - ホストマシンのターミナルを開いたままにする必要がある
-- ネットワーク到達不能時は約 10 分でセッションがタイムアウト
+- ネットワーク到達不能時、サーバーモードは約 10 分で終了する。対話型セッションは再試行を続け、ネットワーク復旧時に再接続する
 
 ### ユースケース
 
@@ -1701,16 +1674,19 @@ claude -w
 
 ### サンドボックスの有効化
 
-**スラッシュコマンド：**
-```
+**スラッシュコマンド**（このプロジェクトの `.claude/settings.local.json` に選択を保存）**：**
+```text
 /sandbox
 ```
 
-**CLI フラグ：**
+**設定ファイル**（全プロジェクト）**：** `~/.claude/settings.json` に `"sandbox": { "enabled": true }` を設定する。
+
+**セッション単位**（設定ファイルに書き込まない）**：**
 ```bash
-claude --sandbox       # Enable sandboxing
-claude --no-sandbox    # Disable sandboxing
+claude --settings '{"sandbox": {"enabled": true}}'
 ```
+
+> `claude --sandbox` / `--no-sandbox` フラグは存在しない。v2.1.300 以降、これらを `claude remote-control` に渡すとエラーで終了する。
 
 ### 設定項目
 
@@ -1927,7 +1903,7 @@ export MAX_MCP_OUTPUT_TOKENS=50000
 export ENABLE_TOOL_SEARCH=true
 
 # Prompt caching
-export ENABLE_PROMPT_CACHING_1H=1      # Use 1-hour prompt cache TTL (default is 5 min)
+export ENABLE_PROMPT_CACHING_1H=1      # Request 1-hour cache TTL for all requests (default: 1h for the main conversation on a subscription, 5 min on API key / cloud providers)
 
 # Task management
 export CLAUDE_CODE_TASK_LIST_ID=my-project-tasks
@@ -1948,7 +1924,7 @@ export ANTHROPIC_CUSTOM_MODEL_OPTION=my-custom-model
 export SLASH_COMMAND_TOOL_CHAR_BUDGET=50000
 ```
 
-> **v2.1.108：** `ENABLE_PROMPT_CACHING_1H=1` — デフォルトの 5 分 TTL ではなく 1 時間のプロンプトキャッシュ TTL を使用する。安定した長時間セッションでキャッシュミスを削減する。
+> **v2.1.108：** `ENABLE_PROMPT_CACHING_1H=1` — メイン会話とその他のリクエストに 1 時間のプロンプトキャッシュ TTL を要求する。未設定の場合、メイン会話はプラン使用量内の Claude サブスクリプションでは 1 時間、API キー・使用量クレジット・クラウドプロバイダーでは 5 分となる。`FORCE_PROMPT_CACHING_5M=1` は 5 分を強制する。安定した長時間セッションでキャッシュミスを削減する。
 
 ### 設定管理コマンド
 
@@ -2007,7 +1983,9 @@ export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
 
 ```json
 {
-  "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  }
 }
 ```
 
@@ -2105,8 +2083,8 @@ Claude Code および関連機能の詳細：
 
 ---
 
-**最終更新：** 2026 年 9 月 30 日
-**Claude Code バージョン：** 2.1.285
+**最終更新：** 2026 年 10 月 15 日
+**Claude Code バージョン：** 2.1.300
 **情報源：**
 - https://code.claude.com/docs/en/permissions
 - https://code.claude.com/docs/en/auto-mode-classifier-billing
@@ -2123,5 +2101,11 @@ Claude Code および関連機能の詳細：
 - https://code.claude.com/docs/en/permission-modes#which-mode-a-session-starts-in
 - https://github.com/anthropics/claude-code/releases/tag/v2.1.284
 - https://github.com/anthropics/claude-code/releases/tag/v2.1.285
+- https://code.claude.com/docs/en/remote-control
+- https://code.claude.com/docs/en/changelog#2-1-300
+- https://code.claude.com/docs/en/sandboxing
+- https://code.claude.com/docs/en/settings-reference#sandbox-enabled
+- https://code.claude.com/docs/en/prompt-caching
+- https://code.claude.com/docs/en/agent-teams
 
 **互換モデル：** Claude Sonnet 4.6、Claude Opus 4.7、Claude Haiku 4.5

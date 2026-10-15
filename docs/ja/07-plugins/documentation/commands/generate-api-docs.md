@@ -3,7 +3,6 @@
 <!-- i18n-date: 2026-04-27 -->
 
 ---
-name: Generate API Documentation
 description: ソースコードから包括的な API ドキュメントを生成する
 ---
 
@@ -17,3 +16,11 @@ description: ソースコードから包括的な API ドキュメントを生�
 4. 例つきの Markdown を作成
 5. リクエスト / レスポンスのスキーマを含める
 6. エラーのドキュメントを追加
+
+---
+
+**最終更新**: 2026 年 10 月 15 日
+**Claude Code バージョン**: 2.1.300
+**出典**:
+- https://code.claude.com/docs/en/plugins
+- https://code.claude.com/docs/en/skills#frontmatter-reference

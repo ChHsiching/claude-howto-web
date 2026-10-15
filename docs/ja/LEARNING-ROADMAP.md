@@ -105,7 +105,7 @@ graph TD
 | **5** | [スキル](03-skills/) | ⭐⭐ 中級 | 1 時間 | レベル 2 | スラッシュコマンド | 自動的な専門性 | 再利用、一貫性 |
 | **6** | [フック](06-hooks/) | ⭐⭐ 中級 | 1 時間 | レベル 2 | ツール、コマンド | ワークフロー自動化（33 イベント、5 種類） | 検証、品質ゲート |
 | **7** | [MCP](05-mcp/) | ⭐⭐⭐ 中級+ | 1 時間 | レベル 2 | 設定 | ライブデータアクセス | リアルタイム連携、API |
-| **8** | [サブエージェント](04-subagents/) | ⭐⭐⭐ 中級+ | 1.5 時間 | レベル 2 | メモリ、コマンド | 複雑タスクの処理（Bash 含む組み込み 6 個） | 委譲、専門性 |
+| **8** | [サブエージェント](04-subagents/) | ⭐⭐⭐ 中級+ | 1.5 時間 | レベル 2 | メモリ、コマンド | 複雑タスクの処理（Explore と Plan を含む組み込み 6 個） | 委譲、専門性 |
 | **9** | [高度な機能](09-advanced-features/) | ⭐⭐⭐⭐⭐ 上級 | 2〜3 時間 | レベル 3 | これまでの全機能 | パワーユーザー向けツール | プランニング、Auto Mode、チャンネル、音声入力、権限 |
 | **10** | [プラグイン](07-plugins/) | ⭐⭐⭐⭐ 上級 | 2 時間 | レベル 3 | これまでの全機能 | 完全なソリューション | チームオンボーディング、配布 |
 | **11** | [CLI マスタリー](10-cli/) | ⭐⭐⭐ 上級 | 1 時間 | レベル 3 | 推奨：これまでの全機能 | コマンドライン利用の習熟 | スクリプト、CI/CD、自動化 |
@@ -402,7 +402,7 @@ claude --permission-mode auto "implement the feature"
 claude --permission-mode auto "implement user settings page"
 
 # 演習 6: Agent Teams を有効化
-export CLAUDE_AGENT_TEAMS=1
+export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
 # Claude にこう依頼: "Implement feature X using a team approach"
 
 # 演習 7: スケジュールタスク
@@ -739,12 +739,14 @@ done
 
 ---
 
-**最終更新**：2026 年 9 月 2 日
-**Claude Code バージョン**：2.1.257
+**最終更新**：2026 年 10 月 15 日
+**Claude Code バージョン**：2.1.300
 **情報源**：
 - https://code.claude.com/docs/en/overview
 - https://code.claude.com/docs/en/hooks
 - https://github.com/anthropics/claude-code/releases/tag/v2.1.119
+- https://code.claude.com/docs/en/agent-teams
+- https://code.claude.com/docs/en/sub-agents
 **互換モデル**：Claude Fable 5、Claude Opus 5、Claude Sonnet 5、Claude Sonnet 4.6、Claude Opus 4.8、Claude Haiku 4.5
 **メンテナンス**：Claude How-To Contributors
 **ライセンス**：教育目的、自由に使用・改変可能

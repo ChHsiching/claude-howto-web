@@ -59,7 +59,7 @@
 | `type` | フックタイプ：`"command"`（bash）、`"prompt"`（LLM）、`"http"`（webhook）、`"mcp_tool"`（MCP ツール呼び出し、v2.1.118 以降）、`"agent"`（サブエージェント） | `"command"` |
 | `command` | 実行するシェルコマンド | `"$CLAUDE_PROJECT_DIR/.claude/hooks/format.sh"` |
 | `timeout` | オプションのタイムアウト（秒）。デフォルトは command/http/mcp_tool が 600、prompt が 30、agent が 60。 | `30` |
-| `once` | `true` の場合、フックはセッションごとに 1 回のみ実行 | `true` |
+| `once` | `true` の場合、最初に成功した実行の後でフックが削除される（失敗・ブロック・タイムアウトした実行では残る）。スキルのフロントマターのみ有効で、settings やエージェントのフロントマターでは無視される | `true` |
 | `async` | `true` の場合、ブロックせずにバックグラウンドで実行 | `true` |
 | `asyncRewake` | `true` の場合、バックグラウンドで実行し、終了コード 2 で Claude を起こす。`async` を含意する。 | `true` |
 | `shell` | `"bash"` または `"powershell"` を受け付ける。デフォルトは `"bash"`、Git Bash が未インストールの Windows では `"powershell"`。 | `"bash"` |
@@ -191,38 +191,38 @@ Claude Code は **33 種類のフックイベント** をサポートする。
 | イベント | 発火タイミング | マッチャー入力 | ブロック可否 | 用途例 |
 |----------|---------------|---------------|-------------|--------|
 | **SessionStart** | セッション開始/再開/clear/compact/fork | startup/resume/clear/compact/fork | 不可 | 環境セットアップ |
-| **Setup** | 初回の環境セットアップ（セッションごとに1回） | （なし） | 不可 | ツールのプロビジョニング、依存関係のインストール |
-| **InstructionsLoaded** | CLAUDE.md やルールファイルが読み込まれた後 | （なし） | 不可 | 指示の修正/フィルタ |
+| **Setup** | `--init-only`、または `-p` と併用した `--init`/`--maintenance`（CI/スクリプト準備） | `init`/`maintenance` | 不可 | ツールのプロビジョニング、依存関係のインストール |
+| **InstructionsLoaded** | CLAUDE.md やルールファイルが読み込まれた後 | 読み込み理由（`session_start`/`nested_traversal`/`path_glob_match`/`include`/`compact`） | 不可 | 監査・可観測性のためのロギング |
 | **UserPromptSubmit** | ユーザーがプロンプトを送信 | （なし） | 可 | プロンプト検証 |
-| **UserPromptExpansion** | ユーザープロンプトが展開（`@` メンション、スラッシュコマンド解決など） | （なし） | 可 | 展開後のプロンプトを変換/検査 |
+| **UserPromptExpansion** | ユーザーが入力したスラッシュコマンドまたは MCP プロンプトがプロンプトに展開される | コマンド名 | 可 | 展開後のプロンプトを変換/検査 |
 | **MessageDisplay** | アシスタントのメッセージ本文が表示される際 | （なし） | 不可 | 表示テキストの変換・非表示化（v2.1.152） |
 | **PreToolUse** | ツール実行前 | ツール名 | 可（allow/deny/ask） | 入力の検証・修正 |
 | **PermissionRequest** | 権限ダイアログ表示 | ツール名 | 可 | 自動承認/拒否 |
-| **PermissionDenied** | ユーザーが権限プロンプトを拒否 | ツール名 | 不可 | ロギング、解析、ポリシー強制 |
+| **PermissionDenied** | auto モードがツール呼び出しを拒否 | ツール名 | 不可 | ロギング、解析、ポリシー強制 |
 | **PostToolUse** | ツール成功後 | ツール名 | 不可 | コンテキスト追加、フィードバック |
 | **PostToolUseFailure** | ツール実行失敗時 | ツール名 | 不可 | エラー処理、ロギング |
-| **PostToolBatch** | ツールバッチ完了後 | （なし） | 不可 | 集約レポート、バッチ検証 |
+| **PostToolBatch** | ツールバッチ完了後 | （なし） | 可 | 集約レポート、バッチ検証 |
 | **Notification** | 通知送信時 | 通知タイプ | 不可 | カスタム通知 |
 | **SubagentStart** | サブエージェント生成 | エージェントタイプ名 | 不可 | サブエージェントセットアップ |
 | **SubagentStop** | サブエージェント完了 | エージェントタイプ名 | 可 | サブエージェント検証 |
 | **Stop** | Claude が応答を終えたとき | （なし） | 可 | タスク完了チェック |
-| **StopFailure** | API エラーでターン終了 | （なし） | 不可 | エラー復旧、ロギング |
+| **StopFailure** | API エラーでターン終了 | エラー種別（`rate_limit`、`overloaded`、`server_error` など） | 不可 | エラー復旧、ロギング |
 | **TeammateIdle** | エージェントチームのメイトがアイドル | （なし） | 可 | チームメイト連携 |
 | **TaskCompleted** | タスク完了マーク | （なし） | 可 | タスク後の処理 |
-| **TaskCreated** | TaskCreate でタスク作成 | （なし） | 不可 | タスク追跡、ロギング |
-| **ConfigChange** | 設定ファイル変更 | （なし） | 可（ポリシーを除く） | 設定更新への反応 |
+| **TaskCreated** | TaskCreate でタスク作成 | （なし） | 可 | タスク追跡、ロギング |
+| **ConfigChange** | 設定ファイル変更 | 設定ソース（`user_settings`/`project_settings`/`local_settings`/`policy_settings`/`skills`） | 可（ポリシーを除く） | 設定更新への反応 |
 | **CwdChanged** | 作業ディレクトリ変更 | （なし） | 不可 | ディレクトリ固有のセットアップ |
-| **DirectoryAdded** | `/add-dir` または SDK の `register_repo_root` コントロールリクエストにより、セッション中に新しい作業ディレクトリが登録された時（v2.1.219） | （なし） | 不可 | 追加されたディレクトリ向けのツール設定 |
-| **FileChanged** | 監視ファイル変更 | （なし） | 不可 | ファイル監視、再ビルド |
-| **PreCompact** | コンテキスト圧縮前 | manual/auto | 不可 | 圧縮前の処理 |
+| **DirectoryAdded** | `/add-dir` または SDK の `register_repo_root` コントロールリクエストにより、セッション中に新しい作業ディレクトリが登録された時（v2.1.219） | `slash_command`/`register_repo_root` | 不可 | 追加されたディレクトリ向けのツール設定 |
+| **FileChanged** | 監視ファイル変更 | 監視するファイル名（例：`.envrc\|.env`） | 不可 | ファイル監視、再ビルド |
+| **PreCompact** | コンテキスト圧縮前 | manual/auto | 可 | 圧縮前の処理 |
 | **PostCompact** | 圧縮完了後 | （なし） | 不可 | 圧縮後の処理 |
 | **PreModelSwitch** | 要求されたモデル切り替えを Claude Code が適用する前 | 切り替え先モデルの正式名（`to_model` から導出） | 可 | モデル変更の制御・拒否 |
 | **PostModelSwitch** | セッションのモデルが変更された後（再開時のモデル復元など、Claude Code 自身による変更を含む） | 切り替え先モデルの正式名（`to_model` から導出） | 不可 | モデル変更のロギング・追随処理 |
 | **WorktreeCreate** | ワークツリー作成中 | （なし） | 可（パス返却） | ワークツリー初期化 |
-| **WorktreeRemove** | ワークツリー削除中 | （なし） | 不可 | ワークツリークリーンアップ |
-| **Elicitation** | MCP サーバーがユーザー入力を要求 | （なし） | 可 | 入力検証 |
-| **ElicitationResult** | ユーザーが elicitation に応答 | （なし） | 可 | 応答処理 |
-| **SessionEnd** | セッション終了 | （なし） | 不可 | クリーンアップ、最終ロギング |
+| **WorktreeRemove** | ワークツリー削除中 | （なし） | 可（非ゼロ終了で削除が失敗） | ワークツリークリーンアップ |
+| **Elicitation** | MCP サーバーがユーザー入力を要求 | MCP サーバー名 | 可 | 入力検証 |
+| **ElicitationResult** | ユーザーが elicitation に応答 | MCP サーバー名 | 可 | 応答処理 |
+| **SessionEnd** | セッション終了 | 終了理由（`clear`/`resume`/`logout`/`prompt_input_exit`/`other`） | 不可 | クリーンアップ、最終ロギング |
 
 > **`TaskCreated` と `TaskCompleted` は todo ツールが有効なときのみ発火する（v2.1.233）。** これらのイベントは todo／タスク追跡ツール（`TaskCreate`/`Get`/`Update`/`List`、`TodoWrite`）から発火するが、それらは **Claude 3.x モデル、Opus 4〜4.7、Sonnet 4〜4.6、Haiku 4.5 でのみデフォルトで利用できる**。それ以外のモデルではフックの設定自体は有効なまま、単に発火しない — 出力もエラーも出ない。`CLAUDE_CODE_ENABLE_TODO_TOOLS=1` を設定すると復活する。
 
@@ -251,7 +251,7 @@ Claude がツールパラメータを生成した後、処理開始前に動作�
 }
 ```
 
-**一般的なマッチャー：** `Task`、`Bash`、`Glob`、`Grep`、`Read`、`Edit`、`Write`、`WebFetch`、`WebSearch`
+**一般的なマッチャー：** `Agent`、`Bash`、`Glob`、`Grep`、`Read`、`Edit`、`Write`、`WebFetch`、`WebSearch`
 
 **出力制御：**
 - `permissionDecision`: `"allow"`、`"deny"`、`"ask"`、`"defer"`
@@ -261,7 +261,7 @@ Claude がツールパラメータを生成した後、処理開始前に動作�
   - `"defer"` は正常終了して後でツールを再開できるようにする。この値では `permissionDecisionReason`、`updatedInput`、`additionalContext` はいずれも無視される
   - フックが何を返しても deny／ask のルールは引き続き評価される。複数の `PreToolUse` フックの判定が食い違う場合、優先順位は `deny` > `defer` > `ask` > `allow` となる
 - `permissionDecisionReason`: 判定の理由。`"allow"` と `"ask"` では（Claude ではなく）ユーザーに表示され、`"deny"` では Claude に表示される。`"defer"` では無視される
-- `updatedInput`: 修正されたツール入力パラメータ
+- `updatedInput`: 置き換え用のツール入力（入力オブジェクト全体を置き換える）。v2.1.300 以降は Claude 自身の入力と同様に検証され、未知のキーは破棄され、ツールが拒否する入力では呼び出しが拒否される。
 
 ### PostToolUse
 
@@ -298,7 +298,7 @@ Claude がツールパラメータを生成した後、処理開始前に動作�
 
 ### UserPromptSubmit
 
-ユーザーがプロンプトを送信し、Claude が処理を開始する前に動作する。
+ユーザーがプロンプトを送信し、Claude が処理を開始する前に動作する。v2.1.299 以降はスキルやカスタムコマンドが展開される前に実行されるため、プロンプトをブロックするとそのコマンドの `!` シェル行も止まる。`UserPromptExpansion` はその後に発火する。
 
 **設定：**
 ```json
@@ -441,11 +441,11 @@ hooks:
       hooks:
         - type: command
           command: "./scripts/check.sh"
-          once: true  # セッションごとに 1 回のみ実行
+          once: true  # スキルのフロントマターのみ：最初の成功実行後に削除
 ---
 ```
 
-**コンポーネントフックでサポートされるイベント：** `PreToolUse`、`PostToolUse`、`Stop`
+**サポートされるイベント：** すべてのフックイベント。サブエージェントのフックはそのサブエージェントがアクティブな間だけ実行される（`Stop` → `SubagentStop`）。スキルのフックはスキル呼び出し時に登録され、セッション終了まで有効のまま残る。
 
 これにより、フックを使用するコンポーネント内に直接定義でき、関連コードを近くにまとめられる。
 
@@ -742,7 +742,7 @@ BLOCKED_PATTERNS = [
 
 def main():
     input_data = json.load(sys.stdin)
-    prompt = input_data.get("user_prompt", "") or input_data.get("prompt", "")
+    prompt = input_data.get("prompt", "")
 
     for pattern, message in BLOCKED_PATTERNS:
         if re.search(pattern, prompt, re.IGNORECASE):
@@ -803,7 +803,7 @@ import sys
 import tempfile
 
 # 設定
-CONTEXT_LIMIT = 128000  # Claude のコンテキストウィンドウ（モデルに合わせて調整）
+CONTEXT_LIMIT = 1000000  # Opus 5、Sonnet 5、Opus 4.8、Sonnet 4.6 は 1M、Haiku 4.5 は 200000（モデルに合わせて調整）
 USE_TIKTOKEN = False    # tiktoken がインストール済みなら True にして精度向上
 
 
@@ -957,7 +957,7 @@ if __name__ == "__main__":
 | 文字推定 | 約 80〜90% | なし | 1ms 未満 |
 | tiktoken（p50k_base） | 約 90〜95% | `pip install tiktoken` | 10ms 未満 |
 
-> **注意：** Anthropic は公式のオフライントークナイザをリリースしていない。両方式とも近似である。トランスクリプトはユーザープロンプト、Claude の応答、ツール出力を含むが、システムプロンプトや内部コンテキストは含まれない。
+> **注意：** Anthropic は公式のオフライントークナイザをリリースしていない。両方式とも近似である。トランスクリプトはユーザープロンプト、Claude の応答、ツール出力を含む。v2.1.300 以降は各 API リクエストのシステムプロンプト、ツール、パラメータも記録される。
 
 ### 例 7：自動モード権限のシード（一度限りのセットアップスクリプト）
 
@@ -1381,8 +1381,8 @@ chmod +x ~/.claude/hooks/*.sh
 
 ---
 
-**最終更新：** 2026 年 9 月 26 日
-**Claude Code バージョン：** 2.1.283
+**最終更新：** 2026 年 10 月 15 日
+**Claude Code バージョン：** 2.1.300
 **情報源：**
 - https://code.claude.com/docs/en/hooks
 - https://code.claude.com/docs/en/plugins/manifest-reference#quoting-and-path-separators
@@ -1391,4 +1391,10 @@ chmod +x ~/.claude/hooks/*.sh
 - https://code.claude.com/docs/en/changelog
 - https://github.com/anthropics/claude-code/releases/tag/v2.1.118
 - https://github.com/anthropics/claude-code/releases/tag/v2.1.119
+- https://code.claude.com/docs/en/hooks#pretooluse
+- https://code.claude.com/docs/en/hooks#pretooluse-decision-control
+- https://code.claude.com/docs/en/hooks#hook-lifecycle
+- https://code.claude.com/docs/en/hooks#userpromptsubmit-input
+- https://code.claude.com/docs/en/changelog#2-1-299
+- https://code.claude.com/docs/en/changelog#2-1-300
 **対応モデル：** Claude Fable 5、Claude Opus 5、Claude Sonnet 5、Claude Sonnet 4.6、Claude Opus 4.8、Claude Haiku 4.5

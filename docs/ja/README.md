@@ -141,7 +141,7 @@ Claude Code の力の 90% を眠らせたままで、しかも自分が何を知
 
 ## 15 分で始める
 
-> **インストールに関する注記**：v2.1.113 以降、Claude Code はプラットフォーム別のネイティブバイナリ（macOS / Linux / Windows）として配布される。`npm install -g @anthropic-ai/claude-code` も引き続き利用可能で、初回利用時にネイティブバイナリがオプション依存関係としてダウンロードされる。v2.1.116 以降、ダウンロード元は `https://downloads.claude.ai/claude-code-releases` であり、企業プロキシではこのホストを許可リストに加える必要がある。
+> **インストールに関する注記**：v2.1.113 以降、Claude Code はプラットフォーム別のネイティブバイナリ（macOS / Linux / Windows）として配布される。推奨のインストール方法はネイティブインストーラー（`curl -fsSL https://claude.ai/install.sh | bash`）である。`npm install -g @anthropic-ai/claude-code` も引き続き利用可能で、インストール時にプラットフォーム別のオプション依存関係を通じて同じネイティブバイナリが取得される。v2.1.116 以降、ダウンロード元は `https://downloads.claude.ai/claude-code-releases` であり、企業プロキシではこのホストを許可リストに加える必要がある。
 
 ```bash
 # 1. ガイドをクローン
@@ -874,8 +874,8 @@ MIT License — [LICENSE](../LICENSE) を参照。利用、変更、再配布は
 
 ---
 
-**最終更新**：2026 年 9 月 19 日
-**Claude Code バージョン**：2.1.278
+**最終更新**：2026 年 10 月 15 日
+**Claude Code バージョン**：2.1.300
 **情報源**：
 - https://code.claude.com/docs/en/tools-reference#task-tool-availability
 - https://code.claude.com/docs/en/hooks
@@ -883,4 +883,5 @@ MIT License — [LICENSE](../LICENSE) を参照。利用、変更、再配布は
 - https://code.claude.com/docs/en/changelog
 - https://github.com/anthropics/claude-code/releases/tag/v2.1.119
 - https://github.com/anthropics/claude-code/releases/tag/v2.1.113
+- https://code.claude.com/docs/en/setup
 **互換モデル**：Claude Sonnet 4.6、Claude Opus 4.7、Claude Haiku 4.5

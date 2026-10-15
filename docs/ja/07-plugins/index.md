@@ -244,35 +244,47 @@ my-plugin/
   "hooks": {
     "PostToolUse": [
       {
-        "command": "node ${CLAUDE_PLUGIN_DATA}/track-usage.js"
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}\"/scripts/track-usage.js \"${CLAUDE_PLUGIN_DATA}\"/usage.json"
+          }
+        ]
       }
     ]
   }
 }
 ```
 
-このディレクトリはプラグインのインストール時に自動作成される。ここに保存したファイルはプラグインがアンインストールされるまで保持される。
+このディレクトリ（`~/.claude/plugins/data/<id>/`）は最初に参照されたときに作成され、プラグインの更新をまたいで保持される。プラグインがインストールされている最後の場所からアンインストールすると削除される（`--keep-data` を渡した場合を除く）。
 
 ### バックグラウンドモニター（v2.1.105）
 
-プラグインは、セッション開始時やプラグインのスキル呼び出し時に自動起動するバックグラウンドモニターを登録できる。プラグインマニフェストにトップレベルの `monitors` キーを追加する：
+プラグインは、セッション開始時、またはプラグインのいずれかのスキルが初めて実行されたときに起動するバックグラウンドモニターを登録できる。`plugin.json` の `experimental.monitors`（または `monitors/monitors.json`）で宣言する：
 
 ```json
 {
   "name": "my-plugin",
   "version": "1.0.0",
-  "monitors": [
-    {
-      "command": "tail -f /var/log/app.log",
-      "trigger": "session_start"
-    }
-  ]
+  "experimental": {
+    "monitors": [
+      {
+        "name": "app-log",
+        "command": "tail -f /var/log/app.log",
+        "description": "Application log errors",
+        "when": "always"
+      }
+    ]
+  }
 }
 ```
 
-`trigger` フィールドが受け付ける値：
-- `"session_start"` — セッション開始時に自動でモニターを起動
-- `"skill_invoke"` — プラグインのスキルが呼ばれたときにモニターを起動
+`name`・`command`・`description` は必須。`when` が受け付ける値：
+- `"always"`（デフォルト）— セッション開始時とプラグインのリロード時に起動
+- `"on-skill-invoke:<skill>"` — そのスキルが初めて実行されたときに起動
+
+未知のキーはエラーとなり、プラグインは読み込まれない。トップレベルの `monitors` キーも引き続き読み込まれるが、`claude plugin validate` が警告を出す。
 
 モニターは内部的に Monitor ツールを利用しており、stdout の各行を Claude が反応できるイベントとしてストリーミングする。
 
@@ -403,13 +415,10 @@ devops-automation/
 │   ├── incident-commander.md
 │   └── alert-analyzer.md
 ├── mcp/
-│   ├── github-config.json
-│   ├── kubernetes-config.json
-│   └── prometheus-config.json
+│   └── kubernetes-config.json
 ├── hooks/
 │   ├── pre-deploy.js
-│   ├── post-deploy.js
-│   └── on-error.js
+│   └── post-deploy.js
 └── scripts/
     ├── deploy.sh
     ├── rollback.sh
@@ -432,8 +441,7 @@ documentation/
 │   ├── code-commentator.md
 │   └── example-generator.md
 ├── mcp/
-│   ├── github-docs-config.json
-│   └── slack-announce-config.json
+│   └── github-docs-config.json
 └── templates/
     ├── api-endpoint.md
     ├── function-docs.md
@@ -1059,8 +1067,8 @@ claude plugin update plugin-name
 
 ---
 
-**最終更新**: 2026 年 9 月 30 日
-**Claude Code バージョン**: 2.1.285
+**最終更新**: 2026 年 10 月 15 日
+**Claude Code バージョン**: 2.1.300
 **出典**:
 - https://code.claude.com/docs/en/discover-plugins
 - https://code.claude.com/docs/en/plugins-reference
@@ -1072,4 +1080,5 @@ claude plugin update plugin-name
 - https://github.com/anthropics/claude-code/releases/tag/v2.1.119
 - https://code.claude.com/docs/en/plugins/install
 - https://code.claude.com/docs/en/plugins/cli-reference
+- https://code.claude.com/docs/en/plugins-reference#monitors
 **対応モデル**: Claude Fable 5、Claude Opus 5、Claude Sonnet 5、Claude Sonnet 4.6、Claude Opus 4.8、Claude Haiku 4.5

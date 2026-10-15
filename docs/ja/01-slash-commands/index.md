@@ -19,7 +19,7 @@
 
 ## 組み込みコマンドリファレンス
 
-組み込みコマンドはよく使うアクションのショートカットである。**60 種類以上の組み込みコマンド**と **5 つの同梱スキル**が利用できる。Claude Code 上で `/` をタイプすると一覧が出る。`/` の後に文字を続けるとフィルタできる。
+組み込みコマンドはよく使うアクションのショートカットである。**60 種類以上の組み込みコマンド**と **約 20 の同梱スキル**が利用できる。Claude Code 上で `/` をタイプすると一覧が出る。`/` の後に文字を続けるとフィルタできる。
 
 | コマンド | 用途 |
 |---------|------|
@@ -76,7 +76,7 @@
 | `/rename [name]` | セッションをリネーム |
 | `/resume [session]` | 会話を再開（エイリアス: `/continue`） |
 | `/review [low\|medium\|high\|xhigh\|max\|ultra] [--fix] [--comment] [pr#\|branch\|path]` | `/code-review` のエイリアス（v2.1.223）。現在の diff、または渡した PR 番号・ブランチ・パスをレビューする（例: `/review 1234`）。同じ effort レベルとフラグを受け付ける。レベルを省略すると、直前に入力した `low`〜`max` のレベルを再利用する |
-| `/rewind` | 会話やコードを巻き戻す（エイリアス: `/checkpoint`） |
+| `/rewind` | 会話やコードを巻き戻す（エイリアス: `/checkpoint`、`/undo`） |
 | `/sandbox` | サンドボックスモードを切り替え |
 | `/schedule [description]` | クラウドのスケジュールタスクを作成／管理 |
 | `/security-review` | ブランチをセキュリティ脆弱性の観点で分析 |
@@ -114,7 +114,6 @@
 | `/fork` | `/branch` に改名（エイリアスは引き続き有効、v2.1.77） |
 | `/pr-comments` | v2.1.91 で削除 — Claude に直接 PR コメントを見るよう依頼する |
 | `/vim` | v2.1.92 で削除 — /config → エディタモードを使う |
-| `/undo` | v2.1.245 時点で公式コマンドリファレンスに掲載されていない（v2.1.108 で `/rewind` のエイリアスとして追加された） — `/rewind` または `Esc` 二度押しを使う |
 
 ### 直近の変更点
 
@@ -137,7 +136,7 @@
 - ちらつきのないフルスクリーン TUI 描画用に `/tui` コマンドを追加（v2.1.110）
 - フォーカスビュー切替用に `/focus` コマンドを追加。`Ctrl+O` は詳細トランスクリプトの切替のみに（v2.1.110）
 - セッションコンテキストのおさらいを手動で発火する `/recap` コマンドを追加（v2.1.108）
-- `/undo` を `/rewind` のエイリアスとして追加（v2.1.108）。v2.1.245 時点で公式コマンドリファレンスには掲載されていない — `/rewind` または `Esc` 二度押しを使う
+- `/undo` を `/rewind` のエイリアスとして追加（v2.1.108）。現在も `/checkpoint` と並ぶ `/rewind` のエイリアスである
 - `/proactive` を `/loop` のエイリアスとして追加（v2.1.105）
 - `/effort` がインタラクティブな矢印キースライダーを獲得し、`high` と `max` の間に新しい `xhigh` レベルを追加。Opus 4.7 プランではデフォルト思考量が `xhigh` に引き上げられた（v2.1.111）
 - 包括的なクラウドベースのマルチエージェントコードレビュー用に `/ultrareview` を追加（v2.1.111）。v2.1.223 で `/code-review ultra` が推奨の呼び出しとなり、`/ultrareview` はエイリアスとして残った
@@ -241,7 +240,7 @@ Instructions for Claude to follow when this command is invoked.
 | `user-invocable` | `false` なら `/` メニューから隠す | `true` |
 | `context` | `fork` に設定すると隔離サブエージェントで実行 | なし |
 | `agent` | `context: fork` 利用時のエージェント種別 | `general-purpose` |
-| `hooks` | スキルスコープのフック（PreToolUse、PostToolUse、Stop） | なし |
+| `hooks` | スキル実行時に登録されるフック（任意のフックイベント。登録後はセッションの残りの間ずっと有効） | なし |
 
 ### 引数
 
@@ -276,6 +275,8 @@ Review PR #$0 with priority $1
 ### シェルコマンドによる動的コンテキスト
 
 プロンプトの前に `` !`command` `` で bash コマンドを実行する:
+
+> **注記（v2.1.299）**: `UserPromptSubmit` フックはコマンドが展開される前に実行されるため、プロンプトをブロックするフックはこれらの `!` コマンドの実行も止める。
 
 ```yaml
 ---
@@ -343,6 +344,8 @@ MCP サーバーはプロンプトをスラッシュコマンドとして公開�
 - `mcp__github` — GitHub MCP サーバー全体にアクセス
 - `mcp__github__*` — すべてのツールにワイルドカードアクセス
 - `mcp__github__get_issue` — 特定のツールにアクセス
+
+> **v2.1.299+:** ルールは名前を指定したサーバーにのみ適用される — `mcp__github` は `github__x` や `github_` という名前のサーバーにはもう一致しない。正規化後の名前に `__` を含むサーバーには `mcp__<正規化後の名前全体>__*` と書く（サブエージェントの `tools:` リストも同様）。
 
 ## コマンドアーキテクチャ
 
@@ -600,8 +603,8 @@ Deploy the application to production:
 
 ---
 
-**最終更新**: 2026 年 9 月 26 日
-**Claude Code バージョン**: 2.1.283
+**最終更新**: 2026 年 10 月 15 日
+**Claude Code バージョン**: 2.1.300
 **Sources**:
 - https://code.claude.com/docs/en/commands
 - https://code.claude.com/docs/en/output-styles
@@ -610,6 +613,10 @@ Deploy the application to production:
 - https://github.com/anthropics/claude-code/releases/tag/v2.1.118
 - https://github.com/anthropics/claude-code/releases/tag/v2.1.116
 - https://github.com/anthropics/claude-code/releases/tag/v2.1.281
+- https://code.claude.com/docs/en/hooks#hooks-in-skills-and-agents
+- https://code.claude.com/docs/en/permissions#mcp
+- https://code.claude.com/docs/en/changelog#2-1-299
+- https://code.claude.com/docs/en/hooks#hook-lifecycle
 **Compatible Models**: Claude Sonnet 4.6, Claude Opus 4.7, Claude Haiku 4.5
 
 *[Claude How To](../) ガイドシリーズの一部*

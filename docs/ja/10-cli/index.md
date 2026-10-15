@@ -29,7 +29,7 @@ graph TD
 
 **v2.1.113** 以降、Claude Code CLI は npm のオプション依存を介して **プラットフォーム別のネイティブバイナリ**（macOS、Linux、Windows）を起動する。バイナリはインストール時に OS とアーキテクチャに合わせて選択される — 旧来のバンドル JavaScript ランタイムは macOS / Linux ではもはやデフォルトではない。
 
-**ユーザー側のインストール手順は変わらない**: `npm install -g @anthropic-ai/claude-code` がそのまま動作し、引き続き推奨経路である。裏側で npm がプラットフォームに合った正しいネイティブバイナリを取得する。
+**推奨インストール方法**はネイティブインストーラーである（`curl -fsSL https://claude.ai/install.sh | bash`、Windows では `irm https://claude.ai/install.ps1 | iex`）。`npm install -g @anthropic-ai/claude-code` も引き続き動作し（Node.js 22 以上）、プラットフォーム別のオプション依存関係を通じて同じネイティブバイナリをインストールする。
 
 **ダウンロードホスト**（v2.1.116+）: ネイティブバイナリ成果物は `https://downloads.claude.ai/claude-code-releases` から配信される。
 
@@ -54,7 +54,8 @@ graph TD
 | `claude mcp serve` | Claude Code を MCP サーバーとして起動 | `claude mcp serve` |
 | `claude agents` | 設定済みのサブエージェントを一覧表示 | `claude agents` |
 | `claude auto-mode defaults` | 自動モードのデフォルトルールを JSON で出力 | `claude auto-mode defaults` |
-| `claude --remote-control [name]` | リモートコントロールを起動（サブコマンドではなくフラグ。エイリアス `--rc`） | `claude --rc` |
+| `claude remote-control` | リモートコントロールサーバーを起動（サーバーモード、ローカルの対話セッションなし。複数セッションを扱う、`--capacity` デフォルト 32） | `claude remote-control --name "My Project"` |
+| `claude --remote-control [name]` | リモートコントロールを有効にした対話セッションを起動（エイリアス `--rc`） | `claude --rc` |
 | `claude plugin` | プラグインを管理（インストール・有効化・無効化） | `claude plugin install my-plugin` |
 | `claude plugin tag [path]` | `[path]` のプラグインに対し `{name}--v{version}` のリリース git タグを作成。`plugin.json` と（存在すれば）マーケットプレイスのエントリが一致しているか検証する（v2.1.118+） | `claude plugin tag ./my-plugin` |
 | `claude install [version]` | 指定したネイティブバイナリのバージョンをインストール。`stable`、`latest`、明示的なバージョン文字列を受け付ける | `claude install 2.1.119` |
@@ -812,9 +813,9 @@ claude -p --output-format json "query"
 **問題:** `claude: command not found`
 
 **対処法:**
-- Claude Code をインストール: `npm install -g @anthropic-ai/claude-code`
-- PATH に npm のグローバル bin ディレクトリが含まれていることを確認
-- フルパスで実行を試す: `npx claude`
+- Claude Code をインストール: `curl -fsSL https://claude.ai/install.sh | bash`（ネイティブ、推奨）または `npm install -g @anthropic-ai/claude-code`
+- PATH に `~/.local/bin`（ネイティブインストール）または npm のグローバル bin ディレクトリが含まれていることを確認
+- `claude doctor` を実行
 
 ### API キーの問題
 
@@ -870,8 +871,8 @@ claude -p --output-format json "query"
 
 ---
 
-**最終更新**: 2026 年 10 月 10 日
-**Claude Code バージョン**: 2.1.296
+**最終更新**: 2026 年 10 月 15 日
+**Claude Code バージョン**: 2.1.300
 **出典**:
 - https://code.claude.com/docs/en/cli-reference
 - https://code.claude.com/docs/en/model-config
@@ -883,4 +884,7 @@ claude -p --output-format json "query"
 - https://github.com/anthropics/claude-code/releases/tag/v2.1.117
 - https://github.com/anthropics/claude-code/releases/tag/v2.1.118
 - https://github.com/anthropics/claude-code/releases/tag/v2.1.119
+- https://code.claude.com/docs/en/remote-control
+- https://code.claude.com/docs/en/setup
+- https://code.claude.com/docs/en/troubleshoot-install#command-not-found-claude-after-installation
 **対応モデル**: Claude Fable 5、Claude Opus 5、Claude Sonnet 5、Claude Sonnet 4.6、Claude Opus 4.8、Claude Haiku 4.5
