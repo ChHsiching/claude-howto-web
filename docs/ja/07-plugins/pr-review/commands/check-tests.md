@@ -3,7 +3,6 @@
 <!-- i18n-date: 2026-04-27 -->
 
 ---
-name: Test Coverage Check
 description: テストカバレッジと品質を検証する
 ---
 
@@ -16,3 +15,11 @@ description: テストカバレッジと品質を検証する
 3. テスト品質をレビュー
 4. 不足しているテストケースを提案
 5. エッジケースが網羅されているかを検証
+
+---
+
+**最終更新**: 2026 年 10 月 15 日
+**Claude Code バージョン**: 2.1.300
+**出典**:
+- https://code.claude.com/docs/en/plugins
+- https://code.claude.com/docs/en/skills#frontmatter-reference

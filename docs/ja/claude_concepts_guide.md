@@ -264,8 +264,8 @@ sequenceDiagram
 |---------------|------|---------|---------|
 | `name` | 文字列 | エージェントの識別子 | `code-reviewer` |
 | `description` | 文字列 | 用途とトリガー語 | `Comprehensive code quality analysis` |
-| `tools` | リスト / 文字列 | 利用可能なツール | `read, grep, diff, lint_runner` |
-| `system_prompt` | Markdown | 振る舞いの指示 | カスタムガイドライン |
+| `tools` | リスト / 文字列 | 利用可能なツール | `Read, Grep, Glob, Bash` |
+| *（Markdown 本文）* | Markdown | システムプロンプト / 振る舞いの指示 | カスタムガイドライン |
 
 ### ツールアクセスの階層
 
@@ -290,7 +290,7 @@ graph TD
 ---
 name: code-reviewer
 description: Comprehensive code quality and maintainability analysis
-tools: read, grep, diff, lint_runner
+tools: Read, Grep, Glob, Bash
 ---
 
 # Code Reviewer Agent
@@ -2818,7 +2818,7 @@ Claude Code は 5 種類（command、http、mcp_tool、prompt、agent）にわ�
 | **Setup** | 初期環境セットアップ（セッションごとに 1 回） | ツール準備、依存関係インストール |
 | **InstructionsLoaded** | CLAUDE.md やルールファイル読み込み時 | 検証、変換、補強 |
 | **UserPromptSubmit** | ユーザーがプロンプト送信時 | 入力検証、プロンプトフィルタ |
-| **UserPromptExpansion** | プロンプト展開（@メンション、スラッシュコマンド解決） | 展開後プロンプトの変換・検査 |
+| **UserPromptExpansion** | 入力したスラッシュコマンド（スキル、カスタムコマンド、MCP プロンプト）がプロンプトに展開される。展開をブロック可能 | 直接の `/command` 使用のブロック・記録、スキルごとのコンテキスト追加 |
 | **PreToolUse** | 任意のツール実行前 | 検証、承認ゲート、ログ |
 | **PermissionRequest** | 権限ダイアログ表示時 | 自動承認・拒否フロー |
 | **PermissionDenied** | ユーザーが権限要求を拒否 | ログ、分析、ポリシー適用 |
@@ -2861,7 +2861,7 @@ Claude Code は 5 種類（command、http、mcp_tool、prompt、agent）にわ�
         "hooks": [
           {
             "type": "command",
-            "command": "prettier --write $CLAUDE_FILE_PATH"
+            "command": "jq -r '.tool_input.file_path' | xargs npx prettier --write"
           }
         ]
       }
@@ -2872,7 +2872,7 @@ Claude Code は 5 種類（command、http、mcp_tool、prompt、agent）にわ�
         "hooks": [
           {
             "type": "command",
-            "command": "eslint $CLAUDE_FILE_PATH"
+            "command": "jq -r '.tool_input.file_path' | xargs npx eslint"
           }
         ]
       }
@@ -2883,9 +2883,8 @@ Claude Code は 5 種類（command、http、mcp_tool、prompt、agent）にわ�
 
 ### フック環境変数
 
-- `$CLAUDE_FILE_PATH` — 編集・書き込み中のファイルパス
-- `$CLAUDE_TOOL_NAME` — 使用中のツール名
-- `$CLAUDE_SESSION_ID` — 現在のセッション ID
+- フック入力は stdin の JSON で届く（`session_id`、`tool_name`、`tool_input.file_path` など）— `jq` で読み取る
+- `$CLAUDE_CODE_SESSION_ID` — 現在のセッション ID
 - `$CLAUDE_PROJECT_DIR` — プロジェクトディレクトリのパス
 
 ### ベストプラクティス
@@ -3006,10 +3005,7 @@ User: Run tests in background
 
 Claude: Started task bg-1234
 
-/task list           # 全タスク一覧
-/task status bg-1234 # 進捗確認
-/task show bg-1234   # 出力閲覧
-/task cancel bg-1234 # タスクキャンセル
+/tasks               # バックグラウンド作業の表示・管理（エイリアス：/bashes）
 ```
 
 ### 権限モード
@@ -3022,7 +3018,7 @@ Claude にできることを制御する。
 | **acceptEdits** | ファイル編集を確認なく承認 | 信頼できる編集ワークフロー |
 | **plan** | 解析・計画のみ、ファイル変更不可 | コードレビュー、アーキテクチャ計画 |
 | **auto** | 安全な操作は自動承認、リスクのみ確認 | 安全性とのバランス自律性 |
-| **dontAsk** | すべての操作を確認なく実行 | 経験者、自動化 |
+| **dontAsk** | 確認が必要な操作はすべて自動拒否。事前承認済みツールと読み取りのみ実行 | ロックダウンした CI・スクリプト |
 | **bypassPermissions** | 制限なし、安全チェックなし | CI/CD、信頼できるスクリプト |
 
 **使い方：**
@@ -3030,7 +3026,7 @@ Claude にできることを制御する。
 claude --permission-mode plan          # 読み取り専用解析
 claude --permission-mode acceptEdits   # 編集を自動承認
 claude --permission-mode auto          # 安全な操作を自動承認
-claude --permission-mode dontAsk       # 確認プロンプトなし
+claude --permission-mode dontAsk       # 事前承認済みツールのみ。それ以外は拒否
 ```
 
 ### ヘッドレスモード（Print Mode）
@@ -3153,8 +3149,8 @@ Claude Code は推論努力を調整可能な 3 モデルをサポートする�
 *収録機能：フック、チェックポイント、プラニングモード、拡張思考、バックグラウンドタスク、権限モード（6 種）、ヘッドレスモード、セッション管理、Auto Memory、Agent Teams、定期タスク、Chrome 連携、Channels、音声入力、同梱スキル*
 
 ---
-**最終更新：** 2026 年 9 月 26 日
-**Claude Code バージョン：** 2.1.283
+**最終更新：** 2026 年 10 月 15 日
+**Claude Code バージョン：** 2.1.300
 **出典：**
 - https://code.claude.com/docs/en/tools-reference#task-tool-availability
 - https://code.claude.com/docs/en/overview
@@ -3163,5 +3159,8 @@ Claude Code は推論努力を調整可能な 3 モデルをサポートする�
 - https://github.com/anthropics/claude-code/releases/tag/v2.1.117
 - https://code.claude.com/docs/en/model-config
 - https://code.claude.com/docs/en/sub-agents
+- https://code.claude.com/docs/en/commands
+- https://code.claude.com/docs/en/permission-modes
+- https://code.claude.com/docs/en/hooks#userpromptexpansion
 
 **対応モデル：** Claude Fable 5、Claude Opus 5、Claude Sonnet 5、Claude Sonnet 4.6、Claude Opus 4.8、Claude Haiku 4.5

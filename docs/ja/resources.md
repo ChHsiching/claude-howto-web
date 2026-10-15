@@ -245,16 +245,17 @@ graph TD
 | **Hook Events** | 33 イベント：PreToolUse、PostToolUse、PostToolUseFailure、Stop、StopFailure、SubagentStart、SubagentStop、Notification、Elicitation など | [フックガイド](06-hooks/) |
 | **Agent Teams** | 複雑なタスクで複数のエージェントを協調させる | [サブエージェントガイド](04-subagents/) |
 | **Scheduled Tasks** | `/loop` と cron ツールで定期タスクをセットアップ | [高度な機能](09-advanced-features/) |
-| **Chrome Integration** | ヘッドレス Chromium によるブラウザ自動化 | [高度な機能](09-advanced-features/) |
+| **Chrome Integration** | Claude in Chrome 拡張機能による自分の Chrome でのブラウザ自動化 | [高度な機能](09-advanced-features/) |
 | **Keyboard Customization** | コードシーケンスを含むキーバインドのカスタマイズ | [高度な機能](09-advanced-features/) |
 | **Monitor Tool** | バックグラウンドコマンドの stdout ストリームを監視し、ポーリングではなくイベントに反応する（v2.1.98+） | [高度な機能](09-advanced-features/) |
 
 ---
-**Last Updated**: September 2, 2026
-**Claude Code Version**: 2.1.257
+**Last Updated**: October 15, 2026
+**Claude Code Version**: 2.1.300
 **Sources**:
 - https://code.claude.com/docs/en/overview
 - https://code.claude.com/docs/en/changelog
 - https://github.com/anthropics/claude-code/releases/tag/v2.1.119
 - https://code.claude.com/docs/en/model-config
+- https://code.claude.com/docs/en/chrome
 **Compatible Models**: Claude Fable 5, Claude Opus 5, Claude Sonnet 5, Claude Sonnet 4.6, Claude Opus 4.8, Claude Haiku 4.5

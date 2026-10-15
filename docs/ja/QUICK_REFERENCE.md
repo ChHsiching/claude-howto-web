@@ -124,13 +124,13 @@ claude -r "session"    # 名前 / ID でセッションを再開
 | **チェックポイント** | 組み込み | `Esc+Esc` または `/rewind` |
 | **プランニングモード** | 組み込み | `/plan <task>` |
 | **権限モード (6 モード)** | 組み込み | `--allowedTools`、`--permission-mode` |
-| **セッション** | 組み込み | `/session <command>` |
+| **セッション** | 組み込み | `/resume`、`/rename`、`/branch`、`/fork` |
 | **バックグラウンドタスク** | 組み込み | バックグラウンドで実行 |
-| **リモートコントロール** | 組み込み | WebSocket API |
-| **Web セッション** | 組み込み | `claude web` |
-| **Git ワークツリー** | 組み込み | `/worktree` |
-| **Auto Memory** | 組み込み | CLAUDE.md に自動保存 |
-| **タスクリスト** | 組み込み | `/task list` |
+| **リモートコントロール** | 組み込み | `claude --remote-control` または `/remote-control` |
+| **Web セッション** | 組み込み | `claude --cloud "task"` |
+| **Git ワークツリー** | 組み込み | `claude -w <name>` |
+| **Auto Memory** | 組み込み | `~/.claude/projects/<project>/memory/` に自動保存 |
+| **タスクリスト** | 組み込み | `Ctrl+T`（チェックリスト）、`/tasks`（バックグラウンド作業） |
 | **バンドルスキル (5 個)** | 組み込み | `/simplify`、`/loop`、`/claude-api`、`/voice`、`/browse` |
 
 ---
@@ -250,10 +250,10 @@ claude --permission-mode plan
 ### Agent Teams
 ```bash
 # Agent Teams を有効化
-export CLAUDE_AGENT_TEAMS=1
+export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
 
 # あるいは settings.json で
-{ "agentTeams": { "enabled": true } }
+{ "env": { "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1" } }
 
 # 開始: "Implement feature X using a team approach"
 ```
@@ -393,14 +393,14 @@ cp -r 03-skills/code-review-specialist ~/.claude/skills/
 | **フック (33 イベント)** | 5 種類に拡張されたフックシステム | command、http、mcp_tool、prompt、agent の各フック種別 |
 | **MCP Elicitation** | MCP サーバが実行時にユーザー入力を要求できる | サーバが要明確化なら自動プロンプト |
 | **Plugin LSP** | プラグインの Language Server Protocol サポート | `userConfig`、`${CLAUDE_PLUGIN_DATA}` 変数 |
-| **リモートコントロール** | WebSocket API で Claude Code を制御 | 外部統合のための `claude --remote` |
-| **Web セッション** | ブラウザベースの Claude Code インターフェース | 起動：`claude web` |
+| **リモートコントロール** | claude.ai または Claude アプリからローカルセッションを操作 | `claude --remote-control`（セッション内では `/remote-control`） |
+| **Web セッション** | claude.ai/code 上のクラウドセッション | ターミナルから開始：`claude --cloud "task"` |
 | **デスクトップアプリ** | ネイティブデスクトップアプリ | claude.ai/download からダウンロード |
-| **タスクリスト** | バックグラウンドタスクの管理 | `/task list`、`/task status <id>` |
-| **Auto Memory** | 会話からの自動メモリ保存 | Claude が CLAUDE.md に主要コンテキストを自動保存 |
-| **Git ワークツリー** | 並列開発のための隔離ワークスペース | `/worktree` で隔離ワークスペースを作成 |
+| **タスクリスト** | バックグラウンドタスクの管理 | `/tasks`（エイリアス `/bashes`） |
+| **Auto Memory** | 会話からの自動メモリ保存 | Claude が `~/.claude/projects/<project>/memory/MEMORY.md` にメモを保存。`/memory` で管理 |
+| **Git ワークツリー** | 並列開発のための隔離ワークスペース | `claude --worktree <name>`（または `-w`） |
 | **モデル選択** | Fable 5.1、Fable 5、Opus 5、Sonnet 5、Sonnet 4.6、Opus 4.8、Haiku 4.5 を切替 | `/model` または `--model` フラグ |
-| **Agent Teams** | タスク上の複数エージェントを協調 | 環境変数 `CLAUDE_AGENT_TEAMS=1` で有効化 |
+| **Agent Teams** | タスク上の複数エージェントを協調 | 環境変数 `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` で有効化（実験的） |
 | **スケジュールタスク** | `/loop` による反復タスク | `/loop 5m /command` または CronCreate ツール |
 | **Chrome 連携** | ブラウザ自動化 | `--chrome` フラグまたは `/chrome` コマンド |
 | **キーバインドカスタマイズ** | カスタムキーバインド | `/keybindings` コマンド |
@@ -506,11 +506,15 @@ A：もちろん。カスタマイズ用のテンプレートである。
 **このカード**：手元に置いてクイックリファレンスとして！
 
 ---
-**最終更新**：2026 年 9 月 2 日
-**Claude Code バージョン**：2.1.257
+**最終更新**：2026 年 10 月 15 日
+**Claude Code バージョン**：2.1.300
 **情報源**：
 - https://code.claude.com/docs/en/overview
 - https://code.claude.com/docs/en/hooks
 - https://code.claude.com/docs/en/commands
 - https://github.com/anthropics/claude-code/releases/tag/v2.1.119
+- https://code.claude.com/docs/en/cli-reference
+- https://code.claude.com/docs/en/remote-control
+- https://code.claude.com/docs/en/agent-teams
+- https://code.claude.com/docs/en/memory#storage-location
 **互換モデル**：Claude Fable 5、Claude Opus 5、Claude Sonnet 5、Claude Sonnet 4.6、Claude Opus 4.8、Claude Haiku 4.5

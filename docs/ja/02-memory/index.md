@@ -531,15 +531,15 @@ npm install -g @anthropic-ai/claude-code@latest
 
 ### サブエージェントのメモリ
 
-サブエージェント（Task のようなツールや並列実行で起動されるもの）は、独自のメモリコンテキストを持てる。サブエージェント定義の `memory` フロントマターフィールドで、ロードするメモリスコープを指定する:
+サブエージェント（Agent ツールで起動されるもの）は、独自の永続メモリを保持できる。サブエージェント定義の `memory` フロントマターフィールドで、そのメモリディレクトリの置き場所を指定する:
 
 ```yaml
-memory: user      # Load user-level memory only
-memory: project   # Load project-level memory only
-memory: local     # Load local memory only
+memory: user      # ~/.claude/agent-memory/<agent-name>/
+memory: project   # .claude/agent-memory/<agent-name>/ (git で共有可能)
+memory: local     # .claude/agent-memory-local/<agent-name>/ (チェックインしない)
 ```
 
-これにより、サブエージェントはメモリ階層全体を継承するのではなく、絞られたコンテキストで動作できる。
+サブエージェントは起動時にそのディレクトリの `MEMORY.md` の先頭 200 行 / 25KB を読み込み、それを維持するための Read/Write/Edit を与えられる。自動メモリが無効な場合は効果がない。
 
 > **注意**: サブエージェントは独自の自動メモリも保持できる。詳細は [公式サブエージェントメモリドキュメント](https://code.claude.com/docs/en/sub-agents#enable-persistent-memory) を参照。
 
@@ -1204,8 +1204,8 @@ Claude はどのメモリファイルを更新するかを尋ねる。
 - [公式メモリドキュメント](https://code.claude.com/docs/en/memory) — Anthropic ドキュメント
 
 ---
-**最終更新**: 2026 年 10 月 10 日
-**Claude Code バージョン**: 2.1.296
+**最終更新**: 2026 年 10 月 15 日
+**Claude Code バージョン**: 2.1.300
 **Sources**:
 - https://code.claude.com/docs/en/memory
 - https://code.claude.com/docs/en/memory#agents-md
@@ -1214,4 +1214,5 @@ Claude はどのメモリファイルを更新するかを尋ねる。
 - https://github.com/anthropics/claude-code/releases/tag/v2.1.119
 - https://github.com/anthropics/claude-code/releases/tag/v2.1.288
 - https://github.com/anthropics/claude-code/releases/tag/v2.1.293
+- https://code.claude.com/docs/en/sub-agents#enable-persistent-memory
 **Compatible Models**: Claude Sonnet 4.6, Claude Opus 4.7, Claude Haiku 4.5

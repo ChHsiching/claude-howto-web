@@ -34,7 +34,7 @@
 `Esc` キーを 2 回（`Esc` + `Esc`）押すと、チェックポイントインターフェイスが開き、保存済みチェックポイントを参照できる。
 
 ### スラッシュコマンド
-すばやくアクセスしたい場合は `/rewind` コマンド（エイリアス：`/checkpoint`）を使う：
+すばやくアクセスしたい場合は `/rewind` コマンド（エイリアス：`/checkpoint`、`/undo`）を使う：
 
 ```bash
 # 巻き戻しインターフェイスを開く
@@ -62,7 +62,7 @@
 Claude Code は自動でチェックポイントを作成する：
 
 - **ユーザーの入力ごと** - 入力のたびに新しいチェックポイントが生成される
-- **セッション間で保持** - 別セッションを跨いでもチェックポイントは残る
+- **セッション間で保持** - チェックポイントは会話と一緒に保存されるため、セッションを再開した後でも `/rewind` が使える
 - **自動クリーンアップ** - 30 日経過したチェックポイントは自動削除される
 
 これにより、数分前から数日前まで、会話のどの時点へも巻き戻せる。
@@ -298,7 +298,7 @@ Claude Code がスナップショットを保持するのは **直近 100 件の
 
 - **`Esc` + `Esc`** - チェックポイントブラウザを開く
 - **`/rewind`** - チェックポイントへの別アクセス手段
-- **`/checkpoint`** - `/rewind` のエイリアス
+- **`/checkpoint`**、**`/undo`** - `/rewind` のエイリアス
 
 ## いつ巻き戻すかを知る：コンテキスト監視
 
@@ -333,10 +333,11 @@ Claude Code がスナップショットを保持するのは **直近 100 件の
 
 ---
 
-**最終更新**: 2026 年 8 月 25 日
-**Claude Code バージョン**: 2.1.245
+**最終更新**: 2026 年 10 月 15 日
+**Claude Code バージョン**: 2.1.300
 **出典**:
 - https://code.claude.com/docs/en/checkpointing
 - https://code.claude.com/docs/en/settings
 - https://github.com/anthropics/claude-code/releases/tag/v2.1.117
+- https://code.claude.com/docs/en/commands
 **対応モデル**: Claude Sonnet 4.6、Claude Opus 4.7、Claude Haiku 4.5

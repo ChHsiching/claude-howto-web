@@ -3,7 +3,6 @@
 <!-- i18n-date: 2026-04-27 -->
 
 ---
-name: Review PR
 description: セキュリティチェックとテストチェックを含む包括的な PR レビューを開始する
 ---
 
@@ -16,3 +15,11 @@ description: セキュリティチェックとテストチェックを含む包�
 3. ドキュメント更新
 4. コード品質チェック
 5. パフォーマンス影響の評価
+
+---
+
+**最終更新**: 2026 年 10 月 15 日
+**Claude Code バージョン**: 2.1.300
+**出典**:
+- https://code.claude.com/docs/en/plugins
+- https://code.claude.com/docs/en/skills#frontmatter-reference

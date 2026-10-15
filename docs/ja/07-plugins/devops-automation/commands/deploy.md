@@ -3,7 +3,6 @@
 <!-- i18n-date: 2026-04-27 -->
 
 ---
-name: Deploy
 description: アプリケーションを本番環境またはステージング環境へデプロイする
 ---
 
@@ -17,3 +16,11 @@ description: アプリケーションを本番環境またはステージング�
 4. 対象環境へデプロイ
 5. ヘルスチェックを実行
 6. Slack でチームに通知
+
+---
+
+**最終更新**: 2026 年 10 月 15 日
+**Claude Code バージョン**: 2.1.300
+**出典**:
+- https://code.claude.com/docs/en/plugins
+- https://code.claude.com/docs/en/skills#frontmatter-reference

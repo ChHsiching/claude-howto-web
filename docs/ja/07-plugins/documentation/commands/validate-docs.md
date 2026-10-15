@@ -3,7 +3,6 @@
 <!-- i18n-date: 2026-04-27 -->
 
 ---
-name: Validate Documentation
 description: ドキュメントの完全性と正確性を検証する
 ---
 
@@ -16,3 +15,11 @@ description: ドキュメントの完全性と正確性を検証する
 3. 完全性を確認
 4. フォーマットをチェック
 5. 実際のコードと突き合わせて検証
+
+---
+
+**最終更新**: 2026 年 10 月 15 日
+**Claude Code バージョン**: 2.1.300
+**出典**:
+- https://code.claude.com/docs/en/plugins
+- https://code.claude.com/docs/en/skills#frontmatter-reference

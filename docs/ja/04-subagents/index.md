@@ -119,14 +119,14 @@ hooks:  # オプション — コンポーネントスコープのフック
 |-----------|-----|------|
 | `name` | はい | 一意な識別子（小文字とハイフン） |
 | `description` | はい | 用途の自然言語による説明。"use PROACTIVELY" を含めると自動呼び出しが促進される |
-| `tools` | いいえ | 特定ツールのカンマ区切りリスト。省略するとすべてのツールを継承。`Agent(agent_name)` 構文で生成可能なサブエージェントを制限できる |
+| `tools` | いいえ | 特定ツールのカンマ区切りリスト。省略するとすべてのツールを継承。`Agent(agent_name)` 構文で生成可能なサブエージェントを制限できる。MCP：`mcp__<server>__*` でサーバー全体を許可（v2.1.299+：その正確なサーバー名のみに一致） |
 | `disallowedTools` | いいえ | サブエージェントが使用してはならないツールのカンマ区切りリスト |
 | `model` | いいえ | 使用モデル：`sonnet`、`opus`、`haiku`、フルモデル ID、または `inherit`。デフォルトは設定済みのサブエージェントモデル |
-| `permissionMode` | いいえ | `manual`（v2.1.200 で `default` から改名 — 旧名の `default` も引き続き有効）、`acceptEdits`、`dontAsk`、`bypassPermissions`、`plan`、`auto` |
+| `permissionMode` | いいえ | `default`（Manual モード。v2.1.200 以降 `manual` もエイリアスとして有効）、`acceptEdits`、`dontAsk`、`bypassPermissions`、`plan`、`auto`。親が `bypassPermissions`、`acceptEdits`、`auto` で動作している場合、サブエージェントの `permissionMode` は無視される |
 | `maxTurns` | いいえ | サブエージェントが取れるエージェント的ターンの最大数 |
 | `skills` | いいえ | プリロードするスキルのカンマ区切りリスト。起動時にスキルの全内容をサブエージェントのコンテキストに注入する |
 | `mcpServers` | いいえ | サブエージェントから利用可能にする MCP サーバー |
-| `hooks` | いいえ | コンポーネントスコープのフック（PreToolUse、PostToolUse、Stop） |
+| `hooks` | いいえ | このサブエージェントがアクティブな間だけ実行されるフック。すべてのフックイベントに対応。よく使うのは `PreToolUse`、`PostToolUse`、`Stop`（`SubagentStop` として実行） |
 | `memory` | いいえ | 永続メモリディレクトリのスコープ：`user`、`project`、`local` |
 | `background` | いいえ | `true` にすると常にこのサブエージェントをバックグラウンドタスクとして実行 |
 | `effort` | いいえ | 推論努力レベル：`low`、`medium`、`high`、`max` |
@@ -414,11 +414,7 @@ claude --agent code-reviewer
 
 ### 利用可能なエージェントの一覧表示
 
-`claude agents` コマンドを使って、すべてのソースから設定済みエージェントを一覧表示する：
-
-```bash
-claude agents
-```
+設定済みのサブエージェントを確認するには、Claude に尋ねるか、`.claude/agents/` と `~/.claude/agents/` を参照する。（`claude agents` は別物で、バックグラウンドセッション用の agent view を開く。）
 
 ---
 
@@ -637,17 +633,14 @@ You are a coordinator agent. You can delegate work to the "worker" and
 
 ## `claude agents` CLI コマンド
 
-`claude agents` コマンドは、設定済みのすべてのエージェントをソース別（組み込み、ユーザーレベル、プロジェクトレベル）にグループ化して一覧表示する：
+`claude agents` は **agent view**（v2.1.139+）を開く。バックグラウンドセッションを状態別にまとめた全画面リストである。設定済みのサブエージェント定義は一覧表示しない。セッション状態をスクリプトで扱うには `claude agents --json` を使う。
 
 ```bash
 claude agents
+claude agents --json
 ```
 
-このコマンドは：
-
-- すべてのソースから利用可能なエージェントを表示する
-- ソースの場所別にエージェントをグループ化する
-- 高い優先度レベルのエージェントが低い優先度のエージェントを覆い隠す場合（例：ユーザーレベルと同名のプロジェクトレベルエージェント）、**override** を表示する
+設定済みのサブエージェントは `.claude/agents/`（プロジェクト）と `~/.claude/agents/`（ユーザー）に置かれる。
 
 ---
 
@@ -1265,8 +1258,8 @@ graph TD
 
 ---
 
-**最終更新**：2026 年 9 月 26 日
-**Claude Code バージョン**：2.1.283
+**最終更新**：2026 年 10 月 15 日
+**Claude Code バージョン**：2.1.300
 **ソース**：
 
 - https://code.claude.com/docs/en/sub-agents
@@ -1275,5 +1268,10 @@ graph TD
 - https://code.claude.com/docs/en/interactive-mode
 - https://github.com/anthropics/claude-code/releases/tag/v2.1.117
 - https://github.com/anthropics/claude-code/releases/tag/v2.1.119
+- https://code.claude.com/docs/en/hooks
+- https://code.claude.com/docs/en/cli-reference
+- https://code.claude.com/docs/en/agent-view
+- https://code.claude.com/docs/en/sub-agents#permission-modes
+- https://code.claude.com/docs/en/sub-agents#available-tools
 
 **互換モデル**：Claude Sonnet 4.6、Claude Opus 4.7、Claude Haiku 4.5

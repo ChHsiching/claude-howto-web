@@ -10,11 +10,8 @@
 INPUT=$(cat)
 
 # JSON 入力からプロンプト本文を抽出
-# Claude Code は UserPromptSubmit を "user_prompt" で送る（無ければ "prompt" にフォールバック）
-PROMPT=$(echo "$INPUT" | sed -n 's/.*"user_prompt"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)
-if [ -z "$PROMPT" ]; then
-  PROMPT=$(echo "$INPUT" | sed -n 's/.*"prompt"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)
-fi
+# Claude Code は UserPromptSubmit の本文を "prompt" フィールドで送る
+PROMPT=$(echo "$INPUT" | sed -n 's/.*"prompt"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)
 
 if [ -z "$PROMPT" ]; then
   exit 0
