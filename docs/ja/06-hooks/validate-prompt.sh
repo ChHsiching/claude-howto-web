@@ -44,7 +44,7 @@ fi
 # 特定操作におけるコンテキスト要件のチェック
 if echo "$PROMPT" | grep -qi "refactor"; then
   if [ ! -d "tests" ] && [ ! -d "test" ]; then
-    printf '{"additionalContext": "警告: テスト無しのリファクタリングはリスクを伴います。先にテストを書くことを検討してください。"}'
+    printf '{"hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": "警告: テスト無しのリファクタリングはリスクを伴います。先にテストを書くことを検討してください。"}}'
   fi
 fi
 

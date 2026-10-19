@@ -236,10 +236,10 @@ graph TD
 | 機能 | 説明 | 詳細 |
 |---------|-------------|------------|
 | **Auto Memory** | Claude がセッションをまたいで好みを自動的に学習・記憶する | [メモリガイド](02-memory/) |
-| **Remote Control** | 外部ツールやスクリプトから Claude Code セッションをプログラム的に制御 | [高度な機能](09-advanced-features/) |
+| **Remote Control** | ローカルの Claude Code セッションをスマートフォン、ブラウザ、または Claude アプリから継続 | [高度な機能](09-advanced-features/) |
 | **Web Sessions** | リモート開発のためのブラウザ経由の Claude Code アクセス | [CLI リファレンス](10-cli/) |
 | **Desktop App** | UI を強化した Claude Code のネイティブデスクトップアプリ | [Claude Code Docs](https://code.claude.com/docs/en/desktop) |
-| **Extended Thinking** | `Alt+T`／`Option+T` または `MAX_THINKING_TOKENS` 環境変数による深い推論の切り替え | [高度な機能](09-advanced-features/) |
+| **Extended Thinking** | `Alt+T`／`Option+T` による深い推論の切り替え。Opus 4.7 以降、Sonnet 5 以降、Haiku 5.5、Fable は常にアダプティブ推論を使うため、`MAX_THINKING_TOKENS` による固定予算は適用されない（深さは `/effort` で調整） | [高度な機能](09-advanced-features/) |
 | **Permission Modes** | きめ細かい制御：default、acceptEdits、plan、auto、dontAsk、bypassPermissions | [高度な機能](09-advanced-features/) |
 | **7-Tier Memory** | Managed Policy、Project、Project Rules、User、User Rules、Local、Auto Memory | [メモリガイド](02-memory/) |
 | **Hook Events** | 33 イベント：PreToolUse、PostToolUse、PostToolUseFailure、Stop、StopFailure、SubagentStart、SubagentStop、Notification、Elicitation など | [フックガイド](06-hooks/) |
@@ -250,12 +250,13 @@ graph TD
 | **Monitor Tool** | バックグラウンドコマンドの stdout ストリームを監視し、ポーリングではなくイベントに反応する（v2.1.98+） | [高度な機能](09-advanced-features/) |
 
 ---
-**Last Updated**: October 15, 2026
-**Claude Code Version**: 2.1.300
+**Last Updated**: October 18, 2026
+**Claude Code Version**: 2.1.302
 **Sources**:
 - https://code.claude.com/docs/en/overview
 - https://code.claude.com/docs/en/changelog
 - https://github.com/anthropics/claude-code/releases/tag/v2.1.119
 - https://code.claude.com/docs/en/model-config
 - https://code.claude.com/docs/en/chrome
+- https://code.claude.com/docs/en/remote-control
 **Compatible Models**: Claude Fable 5, Claude Opus 5, Claude Sonnet 5, Claude Sonnet 4.6, Claude Opus 4.8, Claude Haiku 4.5

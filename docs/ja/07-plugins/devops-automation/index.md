@@ -19,7 +19,7 @@
 ## インストール
 
 ```bash
-/plugin install devops-automation
+claude --plugin-dir ./07-plugins/devops-automation
 ```
 
 ## 同梱内容
@@ -109,9 +109,11 @@ Result:
 
 ---
 
-**最終更新**: 2026 年 4 月 24 日
-**Claude Code バージョン**: 2.1.119
+**最終更新**: 2026 年 10 月 18 日
+**Claude Code バージョン**: 2.1.302
 **出典**:
 - https://code.claude.com/docs/en/plugins
 - https://github.com/anthropics/claude-code/releases/tag/v2.1.119
+- https://code.claude.com/docs/en/plugins/cli-reference
+- https://code.claude.com/docs/en/plugins/install
 **対応モデル**: Claude Sonnet 4.6、Claude Opus 4.7、Claude Haiku 4.5

@@ -29,7 +29,7 @@ graph TD
 
 **v2.1.113** 以降、Claude Code CLI は npm のオプション依存を介して **プラットフォーム別のネイティブバイナリ**（macOS、Linux、Windows）を起動する。バイナリはインストール時に OS とアーキテクチャに合わせて選択される — 旧来のバンドル JavaScript ランタイムは macOS / Linux ではもはやデフォルトではない。
 
-**推奨インストール方法**はネイティブインストーラーである（`curl -fsSL https://claude.ai/install.sh | bash`、Windows では `irm https://claude.ai/install.ps1 | iex`）。`npm install -g @anthropic-ai/claude-code` も引き続き動作し（Node.js 22 以上）、プラットフォーム別のオプション依存関係を通じて同じネイティブバイナリをインストールする。
+**推奨インストール方法**はネイティブインストーラーである（`curl -fsSL https://claude.ai/install.sh | bash`、Windows では `irm https://claude.ai/install.ps1 | iex`）。公式 README では npm によるインストールは非推奨とされている。ネイティブインストーラー、Homebrew（`brew install --cask claude-code`）、または WinGet（`winget install Anthropic.ClaudeCode`）を推奨する。参考までに、`npm install -g @anthropic-ai/claude-code`（Node.js 22 以上）はプラットフォーム別のオプション依存関係を通じて同じネイティブバイナリをインストールする。
 
 **ダウンロードホスト**（v2.1.116+）: ネイティブバイナリ成果物は `https://downloads.claude.ai/claude-code-releases` から配信される。
 
@@ -84,8 +84,8 @@ graph TD
 | `--channels` | MCP チャンネルプラグインを購読。各エントリは `plugin:<name>@<marketplace>` の形式でタグ付けする必要があり、名前のみの指定は拒否される | `claude --channels plugin:discord@my-marketplace` |
 | `--chrome` / `--no-chrome` | Chrome ブラウザ統合を有効化／無効化 | `claude --chrome` |
 | `--effort` | 思考労力レベルを設定 | `claude --effort high` |
-| `--init` / `--init-only` | 初期化フックを実行 | `claude --init` |
-| `--maintenance` | メンテナンスフックを実行して終了 | `claude --maintenance` |
+| `--init` / `--init-only` | `--init` はセッション前に初期化（Setup）フックを実行する（print モードのみ）。`--init-only` は Setup と `SessionStart` フックを実行して終了する | `claude -p --init "query"` |
+| `--maintenance` | セッション前にメンテナンス（Setup）フックを実行する（print モードのみ） | `claude -p --maintenance "query"` |
 | `--disable-slash-commands` | すべてのスキルとスラッシュコマンドを無効化 | `claude --disable-slash-commands` |
 | `--no-session-persistence` | セッション保存を無効化（プリントモード） | `claude -p --no-session-persistence "query"` |
 | `--exclude-dynamic-system-prompt-sections` | プロンプトキャッシュヒット率向上のため、システムプロンプトから動的セクションを除外 | `claude -p --exclude-dynamic-system-prompt-sections "query"` |
@@ -134,14 +134,14 @@ claude -p "list todos" | grep "URGENT"
 ### モデル選択の例
 
 ```bash
-# 複雑なタスクには Opus 4.7
+# 複雑なタスクには Opus 5.5
 claude --model opus "design a caching strategy"
 
 # 速いタスクには Haiku（Anthropic API では v2.1.293 以降 Haiku 5.5、Bedrock・Vertex・Foundry では Haiku 4.5）
 claude --model haiku -p "format this JSON"
 
 # モデル名のフルネーム指定
-claude --model claude-sonnet-4-6-20250929 "review this code"
+claude --model claude-sonnet-4-6 "review this code"
 
 # 信頼性のためフォールバック付き
 claude -p --model opus --fallback-model sonnet "analyze architecture"
@@ -331,7 +331,7 @@ claude -r "feature-auth" --fork-session "test with different architecture"
 | `--no-chrome` | Chrome ブラウザ統合を無効化 | `claude --no-chrome` |
 | `--ide` | 利用可能なら IDE と自動接続 | `claude --ide` |
 | `--max-turns` | エージェントターンを制限（非対話） | `claude -p --max-turns 3 "query"` |
-| `--debug` | フィルタ付きデバッグモードを有効化 | `claude --debug "api,mcp"` |
+| `--debug` | フィルタ付きデバッグモードを有効化（フィルタは `=` 形式でのみ適用） | `claude --debug=api,mcp` |
 | `--enable-lsp-logging` | 詳細な LSP ログを有効化 | `claude --enable-lsp-logging` |
 | `--betas` | API リクエストのベータヘッダ | `claude --betas interleaved-thinking` |
 | `--plugin-dir` | ディレクトリからプラグインを読み込む（複数指定可） | `claude --plugin-dir ./my-plugin` |
@@ -339,7 +339,7 @@ claude -r "feature-auth" --fork-session "test with different architecture"
 | `--effort` | 思考労力レベルを設定 | `claude --effort high` |
 | `--bare` | 最小モード（フック、スキル、プラグイン、MCP、自動メモリ、CLAUDE.md をスキップ） | `claude --bare` |
 | `--channels` | MCP チャンネルプラグインを購読（`plugin:<name>@<marketplace>` 形式でタグ付け） | `claude --channels plugin:discord@my-marketplace` |
-| `--tmux` | ワークツリー用に tmux セッションを作成 | `claude --tmux` |
+| `--tmux` | ワークツリー用に tmux セッションを作成（`--worktree` が必要） | `claude --worktree feature-x --tmux` |
 | `--fork-session` | 再開時に新しいセッション ID を作成 | `claude --resume abc --fork-session` |
 | `--max-budget-usd` | 最大支出額（プリントモード）。上限に達するとバックグラウンドのサブエージェントも停止する (v2.1.217) | `claude -p --max-budget-usd 5.00 "query"` |
 | `--json-schema` | 検証付き JSON 出力 | `claude -p --json-schema '{"type":"object"}' "q"` |
@@ -357,7 +357,7 @@ claude -r "feature-auth" --fork-session "test with different architecture"
 claude -p --max-turns 5 "refactor this module"
 
 # API 呼び出しをデバッグ
-claude --debug "api" "test query"
+claude --debug=api "test query"
 
 # IDE 統合を有効化
 claude --ide "help me with this file"
@@ -639,45 +639,49 @@ claude -p --output-format json \
   --json-schema '{"type":"object","properties":{"functions":{"type":"array"},"complexity":{"type":"string"}}}' \
   "analyze main.py and return function list with complexity rating"
 
-# jq で処理に組み込む
-claude -p --output-format json "list all API endpoints" | jq '.endpoints[]'
+# jq で処理に組み込む（スキーマ出力は .structured_output に入る）
+claude -p --output-format json \
+  --json-schema '{"type":"object","properties":{"endpoints":{"type":"array"}}}' \
+  "list all API endpoints" | jq '.structured_output.endpoints[]'
 
 # スクリプト内で利用
-RESULT=$(claude -p --output-format json "is this code secure? answer with {secure: boolean, issues: []}" < code.py)
-if echo "$RESULT" | jq -e '.secure == false' > /dev/null; then
+RESULT=$(claude -p --output-format json \
+  --json-schema '{"type":"object","properties":{"secure":{"type":"boolean"},"issues":{"type":"array"}},"required":["secure","issues"]}' \
+  "is this code secure?" < code.py)
+if echo "$RESULT" | jq -e '.structured_output.secure == false' > /dev/null; then
   echo "Security issues found!"
-  echo "$RESULT" | jq '.issues[]'
+  echo "$RESULT" | jq '.structured_output.issues[]'
 fi
 ```
 
 ### jq でのパース例
 
-`jq` で Claude の JSON 出力をパース・処理する：
+`jq` で Claude の JSON 出力をパース・処理する。応答テキストは `.result` に入り、`--json-schema` を指定した場合は検証済みオブジェクトが `.structured_output` に入る（以下の `$SCHEMA` は各フィルタが読むフィールドを定義したスキーマを表す）：
 
 ```bash
-# 特定フィールドの抽出
-claude -p --output-format json "analyze this code" | jq '.result'
+# 応答テキストの抽出
+claude -p --output-format json "analyze this code" | jq -r '.result'
 
 # 配列要素のフィルタ
-claude -p --output-format json "list issues" | jq -r '.issues[] | select(.severity=="high")'
+claude -p --output-format json --json-schema "$SCHEMA" "list issues" | jq -r '.structured_output.issues[] | select(.severity=="high")'
 
 # 複数フィールドの抽出
-claude -p --output-format json "describe the project" | jq -r '.{name, version, description}'
+claude -p --output-format json --json-schema "$SCHEMA" "describe the project" | jq -r '.structured_output | {name, version, description}'
 
 # CSV への変換
-claude -p --output-format json "list functions" | jq -r '.functions[] | [.name, .lineCount] | @csv'
+claude -p --output-format json --json-schema "$SCHEMA" "list functions" | jq -r '.structured_output.functions[] | [.name, .lineCount] | @csv'
 
 # 条件付き処理
-claude -p --output-format json "check security" | jq 'if .vulnerabilities | length > 0 then "UNSAFE" else "SAFE" end'
+claude -p --output-format json --json-schema "$SCHEMA" "check security" | jq 'if (.structured_output.vulnerabilities | length) > 0 then "UNSAFE" else "SAFE" end'
 
 # ネストされた値の取得
-claude -p --output-format json "analyze performance" | jq '.metrics.cpu.usage'
+claude -p --output-format json --json-schema "$SCHEMA" "analyze performance" | jq '.structured_output.metrics.cpu.usage'
 
 # 配列全体の処理
-claude -p --output-format json "find todos" | jq '.todos | length'
+claude -p --output-format json --json-schema "$SCHEMA" "find todos" | jq '.structured_output.todos | length'
 
 # 出力の変換
-claude -p --output-format json "list improvements" | jq 'map({title: .title, priority: .priority})'
+claude -p --output-format json --json-schema "$SCHEMA" "list improvements" | jq '.structured_output.improvements | map({title: .title, priority: .priority})'
 ```
 
 ---
@@ -739,14 +743,14 @@ export CLAUDE_CODE_EFFORT_LEVEL=xhigh   # low, medium, high, xhigh (default on O
 | `MAX_THINKING_TOKENS` | 拡張思考のトークン予算を設定 |
 | `CLAUDE_CODE_EFFORT_LEVEL` | 労力レベルを設定（`low`／`medium`／`high`／`xhigh`／`max`） — `xhigh` は Opus 4.7 のデフォルト、`max` は Opus 4.7 のみ |
 | `CLAUDE_CODE_SIMPLE` | 最小モード（`--bare` フラグで設定される） |
-| `CLAUDE_CODE_DISABLE_AUTO_MEMORY` | CLAUDE.md の自動更新を無効化 |
+| `CLAUDE_CODE_DISABLE_AUTO_MEMORY` | `1` を設定すると自動メモリを無効化する（自動メモリファイルを作成も読み込みもしない） |
 | `CLAUDE_CODE_DISABLE_BACKGROUND_TASKS` | バックグラウンドタスク実行を無効化 |
 | `CLAUDE_CODE_DISABLE_CRON` | スケジュール／cron タスクを無効化 |
 | `CLAUDE_CODE_DISABLE_GIT_INSTRUCTIONS` | git 関連の指示を無効化 |
 | `CLAUDE_CODE_DISABLE_TERMINAL_TITLE` | ターミナルタイトル更新を無効化 |
 | `CLAUDE_CODE_DISABLE_1M_CONTEXT` | 1M トークンコンテキストウィンドウを無効化 |
 | `CLAUDE_CODE_DISABLE_NONSTREAMING_FALLBACK` | 非ストリーミングフォールバックを無効化 |
-| `CLAUDE_CODE_ENABLE_TASKS` | タスクリスト機能を有効化 |
+| `CLAUDE_CODE_ENABLE_TASKS` | Task ツールがデフォルト。`0` を設定すると従来の `TodoWrite` ツールに戻る |
 | `CLAUDE_CODE_TASK_LIST_ID` | セッション間で共有する名前付きタスクディレクトリ |
 | `CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION` | プロンプトサジェストを切り替え（`true`／`false`） |
 | `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` | 実験的なエージェントチームを有効化 |
@@ -762,7 +766,7 @@ export CLAUDE_CODE_EFFORT_LEVEL=xhigh   # low, medium, high, xhigh (default on O
 | `CLAUDE_CODE_PERFORCE_MODE` | `1` を設定すると Perforce モードを有効化 — ファイルをデフォルトで読み取り専用として扱う（Perforce/P4 バージョン管理ワークフロー向け）（v2.1.98 追加） |
 | `DISABLE_UPDATES` | 手動の `claude update` を含むすべての更新経路をブロックする。バックグラウンドの自動更新のみブロックする `DISABLE_AUTOUPDATER` より厳密（v2.1.118+） |
 | `CLAUDE_CODE_HIDE_CWD` | `1` に設定すると、起動時ロゴでカレント作業ディレクトリを隠す（プライバシー／画面共有用途）（v2.1.119+） |
-| `CLAUDE_CODE_FORK_SUBAGENT` | デフォルトでフォークモードが無効な場面 — 非対話モード（`claude -p`）、Agent SDK、v2.1.232 より古い Claude Code — で `1` を設定するとフォークモードを有効化する。v2.1.232 以降、フォークモードはファーストパーティかどうかを問わずすべてのビルドの対話セッションでデフォルト有効（GA は v2.1.117） |
+| `CLAUDE_CODE_FORK_SUBAGENT` | `0` を設定するとフォークサブエージェントを無効化する。v2.1.302 以降、ターミナル、`claude -p`、Agent SDK、デスクトップアプリ、VS Code でデフォルト有効。v2.1.302 より前は、`claude -p` と Agent SDK で有効にするには `1` を設定する。 |
 | `OTEL_LOG_TOOL_DETAILS` | `1` を設定すると OpenTelemetry イベント中のカスタムおよび MCP コマンド名のリダクションを解除する（v2.1.117+）。デフォルトはリダクション有効。 |
 
 > **Vertex AI 上の `ENABLE_TOOL_SEARCH`（v2.1.119+）**: ツール検索は **Google Cloud Vertex AI 上のデプロイではデフォルト無効** である。Vertex 上でツール検索機能を使いたい場合は `export ENABLE_TOOL_SEARCH=true` で明示的にオプトインする必要がある。Anthropic API 直結ではデフォルト有効のままである。
@@ -871,8 +875,8 @@ claude -p --output-format json "query"
 
 ---
 
-**最終更新**: 2026 年 10 月 15 日
-**Claude Code バージョン**: 2.1.300
+**最終更新**: 2026 年 10 月 18 日
+**Claude Code バージョン**: 2.1.302
 **出典**:
 - https://code.claude.com/docs/en/cli-reference
 - https://code.claude.com/docs/en/model-config
@@ -887,4 +891,10 @@ claude -p --output-format json "query"
 - https://code.claude.com/docs/en/remote-control
 - https://code.claude.com/docs/en/setup
 - https://code.claude.com/docs/en/troubleshoot-install#command-not-found-claude-after-installation
+- https://code.claude.com/docs/en/headless
+- https://code.claude.com/docs/en/env-vars
+- https://code.claude.com/docs/en/sub-agents
+- https://code.claude.com/docs/en/changelog#2-1-302
+- https://github.com/anthropics/claude-code
+- https://platform.claude.com/docs/en/about-claude/models/overview
 **対応モデル**: Claude Fable 5、Claude Opus 5、Claude Sonnet 5、Claude Sonnet 4.6、Claude Opus 4.8、Claude Haiku 4.5

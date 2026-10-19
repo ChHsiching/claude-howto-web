@@ -115,7 +115,7 @@ claude --permission-mode plan
 
 **キーボードショートカット：**
 - `Shift + Tab` — 権限モードを切り替える（プランモードを含む）
-- `Alt + M` — 権限モードを切り替える（Windows/Linux）
+- `Alt + M` — 権限モードを切り替える（Windows のみ。ランタイムが VT 入力モードを有効にしない場合）
 
 ### プランニングモードのメリット
 
@@ -462,9 +462,9 @@ v2.1.118 以降、`autoMode.allow`、`autoMode.soft_deny`、`autoMode.environmen
 
 これにより、分類器が確信を持って承認できない場合でも、ユーザーは常に制御を保持できる。
 
-### オートモード相当の権限を投入する（Team プラン不要）
+### オートモード相当の権限を投入する
 
-Team プランを持っていない場合、またはバックグラウンド分類器なしでよりシンプルなアプローチを取りたい場合は、`~/.claude/settings.json` に保守的なベースラインの安全な権限ルールを投入できる。スクリプトはまず読み取り専用とローカル検査のルールから始まり、編集、テスト、ローカル Git 書き込み、パッケージインストール、GitHub 書き込み操作などはオプトインで有効化する。
+バックグラウンド分類器なしでよりシンプルなアプローチを取りたい場合は、`~/.claude/settings.json` に保守的なベースラインの安全な権限ルールを投入できる。スクリプトはまず読み取り専用とローカル検査のルールから始まり、編集、テスト、ローカル Git 書き込み、パッケージインストール、GitHub 書き込み操作などはオプトインで有効化する。
 
 **ファイル：** `09-advanced-features/setup-auto-mode-permissions.py`
 
@@ -721,13 +721,13 @@ export CLAUDE_CODE_DISABLE_CRON=1
 | `bypassPermissions` | 全操作、権限チェックなし（危険） |
 | `dontAsk` | 事前承認済みツールのみ実行、その他はすべて拒否 |
 
-CLI では `Shift+Tab` でモードを切り替える。デフォルトは `--permission-mode` フラグまたは `permissions.defaultMode` 設定で指定する。パーミッションモードが未設定の場合、v2.1.284 以降は対話型のターミナルセッションと VS Code セッションがすべてのプランとプロバイダーで auto モードで開始する（v2.1.283 では Bedrock、Google Cloud の Agent Platform、Foundry などのサードパーティプロバイダー上、またはテレメトリをオフにした場合に限られていた）。`permissions.defaultMode` は引き続きこれより優先され、auto モードを利用できないセッションは代わりに `default`（Manual）で開始する。`claude -p` と Agent SDK は何も設定されていない場合 `default` で開始するが、v2.1.285 以降はサードパーティプロバイダー上またはテレメトリをオフにした `claude -p` と Python Agent SDK のセッションも auto モードで開始する。`--permission-mode` は引き続きこれより優先される。
+CLI では `Shift+Tab` でモードを切り替える。デフォルトは `--permission-mode` フラグまたは `permissions.defaultMode` 設定で指定する。パーミッションモードが未設定の場合、v2.1.284 以降は対話型のターミナルセッションと VS Code セッションがすべてのプランとプロバイダーで auto モードで開始する（v2.1.283 では Bedrock、Google Cloud の Agent Platform、Foundry などのサードパーティプロバイダー上、またはテレメトリをオフにした場合に限られていた）。`permissions.defaultMode` は引き続きこれより優先され、auto モードを利用できないセッションは代わりに `default`（Manual）で開始する。v2.1.302 以降、パーミッションモードを設定していない `claude -p` と Agent SDK のセッションは、サードパーティプロバイダー上、テレメトリをオフにした場合、または新規インストール直後には `default` モードで開始する。auto モードを維持するには `--permission-mode auto` を渡す。
 
 ### 起動方法
 
 **キーボードショートカット：**
 ```bash
-Shift + Tab  # Cycle through all 6 modes
+Shift + Tab  # Cycle default → acceptEdits → plan, then bypassPermissions/auto when available (dontAsk never appears in the cycle)
 ```
 
 **スラッシュコマンド：**
@@ -982,7 +982,7 @@ claude --resume auth-refactor --fork-session "alternative approach"
 
 ### セッションリキャップ（v2.1.108）
 
-しばらく離れた後にセッションへ戻ると、Claude は何が達成されたかを簡潔に振り返れる。テレメトリが無効化されているユーザー（Bedrock、Vertex、Foundry ユーザー）ではデフォルトで有効である。
+しばらく離れた後にセッションへ戻ると、Claude は何が達成されたかを簡潔に振り返れる。すべてのプランとプロバイダーでデフォルトで有効であり、`/config` の **Session recap** でオフにできる。
 
 **リキャップ動作の制御：**
 
@@ -1137,26 +1137,22 @@ User: Ctrl+R  # Search history
 
 ### 複数行入力
 
-複雑なクエリには複数行モードを使う：
+複雑なクエリでは、`\` + Enter、Option+Enter（macOS）、Shift+Enter、または Ctrl+J で改行する。`\end` のような終端記号はなく、Enter で送信する：
 
 ```bash
-User: \
-> Long complex prompt
-> spanning multiple lines
-> \end
+User: Long complex prompt \
+spanning multiple lines
 ```
 
 **例：**
 
 ```
-User: \
-> Implement a user authentication system
-> with the following requirements:
-> - JWT tokens
-> - Email verification
-> - Password reset
-> - 2FA support
-> \end
+User: Implement a user authentication system \
+with the following requirements: \
+- JWT tokens \
+- Email verification \
+- Password reset \
+- 2FA support
 
 Claude: [Processes the multi-line request]
 ```
@@ -1226,11 +1222,12 @@ TUI（Text User Interface）モードは Claude Code をちらつきのない出
 
 ### TUI モードの有効化
 
-`/tui` コマンドで切り替えるか、`--tui` フラグで起動する：
+`/tui` コマンドでレンダラーを切り替えるか、起動前に `CLAUDE_CODE_NO_FLICKER=1` を設定する：
 
 ```bash
-/tui          # toggle from within a session
-claude --tui  # start directly in TUI mode
+/tui fullscreen               # switch to fullscreen from within a session
+/tui default                  # switch back to the classic renderer
+CLAUDE_CODE_NO_FLICKER=1 claude  # start directly in fullscreen
 ```
 
 ### 設定
@@ -1285,11 +1282,11 @@ claude --tui  # start directly in TUI mode
 ### チャンネルの購読
 
 ```bash
-# Subscribe to channel plugins at startup
-claude --channels discord,telegram
+# Subscribe to a channel plugin at startup
+claude --channels plugin:telegram@claude-plugins-official
 
-# Subscribe to multiple sources
-claude --channels discord,telegram,imessage,webhooks
+# Subscribe to multiple sources (space-separated)
+claude --channels plugin:discord@claude-plugins-official plugin:telegram@claude-plugins-official
 ```
 
 ### サポート対象の連携
@@ -1307,25 +1304,29 @@ claude --channels discord,telegram,imessage,webhooks
 
 ```json
 {
-  "allowedChannelPlugins": ["discord", "telegram"]
+  "channelsEnabled": true,
+  "allowedChannelPlugins": [
+    { "marketplace": "claude-plugins-official", "plugin": "discord" },
+    { "marketplace": "claude-plugins-official", "plugin": "telegram" }
+  ]
 }
 ```
 
-`allowedChannelPlugins` マネージド設定は、組織全体で許可されるチャンネルプラグインを制御する。
+`allowedChannelPlugins` マネージド設定は、組織全体で許可されるチャンネルプラグインを制御する。Anthropic が管理する許可リストを置き換え、`channelsEnabled: true` が必要である。
 
 ### 仕組み
 
 1. MCP サーバが外部サービスに接続するチャンネルプラグインとして動作する
 2. 受信メッセージとイベントがアクティブな Claude Code セッションへプッシュされる
 3. Claude はセッションのコンテキスト内でメッセージを読んで応答できる
-4. チャンネルプラグインは `allowedChannelPlugins` マネージド設定で承認が必要
+4. チャンネルプラグインは Anthropic が管理する許可リスト、または管理者が設定した場合は組織の `allowedChannelPlugins` リストに含まれている必要がある
 5. ポーリング不要 — イベントはリアルタイムでプッシュされる
 
 ---
 
 ## Chrome 連携
 
-Chrome 連携は、Claude Code を Chrome または Microsoft Edge ブラウザに接続し、ライブな Web 自動化とデバッグを行う機能である。これは v2.0.73 以降で利用可能なベータ機能である（Edge サポートは v1.0.36 以降で追加）。
+Chrome 連携は、Claude Code を Chrome または Microsoft Edge ブラウザに接続し、ライブな Web 自動化とデバッグを行う機能である。これは v2.0.73 以降で利用可能なベータ機能である（Claude in Chrome 拡張機能 v1.0.36 以降が必要）。
 
 ### Chrome 連携の有効化
 
@@ -1365,7 +1366,7 @@ Claude Code は表示されたウィンドウ内でブラウザを操作する �
 
 ### 既知の制限
 
-- **ブラウザ対応：** Chrome と Edge のみ — Brave、Arc、その他の Chromium ブラウザは非対応
+- **ブラウザ対応：** Chrome と Edge。Claude Code は Brave、Arc、Vivaldi、Opera など他の Chromium ベースのブラウザにも接続できる
 - **WSL：** Windows Subsystem for Linux では利用不可
 - **サードパーティプロバイダ：** Bedrock、Vertex、Foundry の API プロバイダでは非対応
 - **サービスワーカーのアイドル：** 長時間セッション中に Chrome 拡張機能のサービスワーカーがアイドル状態になることがある
@@ -1525,10 +1526,15 @@ Claude Code デスクトップアプリは、視覚的な diff レビュー、�
 
 ```json
 {
-  "command": "npm run dev",
-  "port": 3000,
-  "readyPattern": "ready on",
-  "persistCookies": true
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "my-app",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3000
+    }
+  ]
 }
 ```
 
@@ -1558,9 +1564,10 @@ Claude Code デスクトップアプリは、視覚的な diff レビュー、�
 
 | モード | 挙動 |
 |------|----------|
-| **Ask permissions**（デフォルト） | すべての編集とコマンドをレビューして承認 |
-| **Auto accept edits** | ファイル編集は自動承認、コマンドは手動承認 |
-| **Plan mode** | 変更前にアプローチをレビュー |
+| **Manual**（デフォルト） | すべての編集とコマンドをレビューして承認 |
+| **Accept edits** | ファイル編集は自動承認、コマンドは手動承認 |
+| **Plan** | 変更前にアプローチをレビュー |
+| **Auto** | 通常の確認なしで実行。バックグラウンド分類器が事前にアクションをチェックする |
 | **Bypass permissions** | 自動実行（サンドボックス限定、管理者制御） |
 
 ### エンタープライズ機能
@@ -1727,8 +1734,7 @@ claude --settings '{"sandbox": {"enabled": true}}'
       "allowWrite": ["/Users/me/project"],
       "allowRead": ["/Users/me/project", "/usr/local/lib"],
       "denyRead": ["/Users/me/.ssh", "/Users/me/.aws"]
-    },
-    "enableWeakerNetworkIsolation": true
+    }
   }
 }
 ```
@@ -1738,7 +1744,7 @@ claude --settings '{"sandbox": {"enabled": true}}'
 - Bash コマンドはファイルシステムアクセスを制限したサンドボックス環境で動作する
 - ネットワークアクセスを隔離して意図しない外部接続を防げる
 - 多層防御のため権限ルールと併用できる
-- macOS では `sandbox.enableWeakerNetworkIsolation` でネットワーク制限を行う（macOS では完全なネットワーク隔離は利用不可）
+- macOS では Seatbelt がサンドボックスプロキシへの接続以外のすべてのネットワーク接続をブロックする。`sandbox.enableWeakerNetworkIsolation` はその隔離を**弱める**設定で、MITM の `httpProxyPort` プロキシ配下の Go 製 CLI などに限って使う
 
 ### ユースケース
 
@@ -1763,10 +1769,10 @@ claude --settings '{"sandbox": {"enabled": true}}'
 
 ### マネージドドロップイン
 
-v2.1.83 以降、管理者は複数のマネージド設定ファイルを `managed-settings.d/` ディレクトリに配置できる。ファイルはアルファベット順にマージされ、チーム横断のモジュラー設定が可能になる：
+v2.1.83 以降、管理者は複数のマネージド設定ファイルを `managed-settings.d/` ディレクトリに配置できる。ファイルはアルファベット順にマージされ、チーム横断のモジュラー設定が可能になる。このディレクトリはシステムディレクトリ内の `managed-settings.json` の隣に置く（macOS は `/Library/Application Support/ClaudeCode/`、Linux は `/etc/claude-code/`、Windows は `C:\Program Files\ClaudeCode\`）：
 
 ```
-~/.claude/managed-settings.d/
+/etc/claude-code/managed-settings.d/
   00-org-defaults.json
   10-team-policies.json
   20-project-overrides.json
@@ -1776,7 +1782,7 @@ v2.1.83 以降、管理者は複数のマネージド設定ファイルを `mana
 
 | 設定 | 説明 |
 |---------|-------------|
-| `disableBypassPermissionsMode` | ユーザーによる bypass permissions の有効化を防ぐ |
+| `permissions.disableBypassPermissionsMode` | `"disable"` に設定すると、ユーザーによる bypass permissions の有効化を防ぐ |
 | `availableModels` | ユーザーが選択可能なモデルを制限する |
 | `allowedChannelPlugins` | 許可するチャンネルプラグインを制御する |
 | `autoMode.environment` | オートモードの信頼インフラを設定する |
@@ -1791,8 +1797,11 @@ v2.1.83 以降、管理者は複数のマネージド設定ファイルを `mana
   "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <key>disableBypassPermissionsMode</key>
-  <true/>
+  <key>permissions</key>
+  <dict>
+    <key>disableBypassPermissionsMode</key>
+    <string>disable</string>
+  </dict>
   <key>availableModels</key>
   <array>
     <string>claude-sonnet-4-6</string>
@@ -1808,13 +1817,14 @@ v2.1.83 以降、管理者は複数のマネージド設定ファイルを `mana
 
 ### 設定ファイルの場所
 
-1. **グローバル設定：** `~/.claude/config.json`
-2. **プロジェクト設定：** `./.claude/config.json`
-3. **ユーザー設定：** `~/.config/claude-code/settings.json`
+1. **ユーザー設定：** `~/.claude/settings.json`
+2. **プロジェクト設定：** `.claude/settings.json`（チェックインする）
+3. **ローカルプロジェクト設定：** `.claude/settings.local.json`（チェックインしない）
+4. **マネージド設定：** システムディレクトリ内の `managed-settings.json`（[マネージド設定](#マネージド設定エンタープライズ)を参照）
 
 ### 完全な設定例
 
-**コア高度機能の設定：**
+**コア高度機能の設定**（`.claude/settings.json`）：
 
 ```json
 {
@@ -1822,16 +1832,25 @@ v2.1.83 以降、管理者は複数のマネージド設定ファイルを `mana
     "defaultMode": "default"
   },
   "hooks": {
-    "PreToolUse:Edit": "eslint --fix ${file_path}",
-    "PostToolUse:Write": "~/.claude/hooks/security-scan.sh"
-  },
-  "mcp": {
-    "enabled": true,
-    "servers": {
-      "github": {
-        "command": "npx",
-        "args": ["-y", "@modelcontextprotocol/server-github"]
-      }
+    "PreToolUse": [
+      { "matcher": "Edit", "hooks": [{ "type": "command", "command": "~/.claude/hooks/eslint-fix.sh" }] }
+    ],
+    "PostToolUse": [
+      { "matcher": "Write", "hooks": [{ "type": "command", "command": "~/.claude/hooks/security-scan.sh" }] }
+    ]
+  }
+}
+```
+
+フックスクリプトはツール入力を stdin の JSON として受け取る（例：`tool_input.file_path`）。`${file_path}` の置換は存在しない。MCP サーバは設定キーではないため、プロジェクトルートの `.mcp.json` に定義する：
+
+```json
+{
+  "mcpServers": {
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": { "Authorization": "Bearer ${GITHUB_PERSONAL_ACCESS_TOKEN}" }
     }
   }
 }
@@ -1843,30 +1862,19 @@ v2.1.83 以降、管理者は複数のマネージド設定ファイルを `mana
 {
   "permissions": {
     "defaultMode": "default",
-    "allowedTools": ["Bash(git log:*)", "Read"],
-    "disallowedTools": ["Bash(rm -rf:*)"]
+    "allow": ["Bash(git log:*)", "Read"],
+    "deny": ["Bash(rm -rf:*)"]
   },
 
   "hooks": {
-    "PreToolUse": [{ "matcher": "Edit", "hooks": ["eslint --fix ${file_path}"] }],
-    "PostToolUse": [{ "matcher": "Write", "hooks": ["~/.claude/hooks/security-scan.sh"] }],
-    "Stop": [{ "hooks": ["~/.claude/hooks/notify.sh"] }]
-  },
-
-  "mcp": {
-    "enabled": true,
-    "servers": {
-      "github": {
-        "command": "npx",
-        "args": ["-y", "@modelcontextprotocol/server-github"],
-        "env": {
-          "GITHUB_TOKEN": "${GITHUB_TOKEN}"
-        }
-      }
-    }
+    "PreToolUse": [{ "matcher": "Edit", "hooks": [{ "type": "command", "command": "~/.claude/hooks/eslint-fix.sh" }] }],
+    "PostToolUse": [{ "matcher": "Write", "hooks": [{ "type": "command", "command": "~/.claude/hooks/security-scan.sh" }] }],
+    "Stop": [{ "hooks": [{ "type": "command", "command": "~/.claude/hooks/notify.sh" }] }]
   }
 }
 ```
+
+この構成の GitHub MCP サーバは、上記のとおり `.mcp.json` に置く。
 
 ### 環境変数
 
@@ -1887,7 +1895,7 @@ export MAX_THINKING_TOKENS=16000
 export CLAUDE_CODE_EFFORT_LEVEL=xhigh   # low, medium, high, xhigh (Opus 4.7 only, default), or max (supported on Opus 4.7, Opus 4.6, Sonnet 4.6)
 
 # Feature toggles
-export CLAUDE_CODE_DISABLE_AUTO_MEMORY=true
+export CLAUDE_CODE_DISABLE_AUTO_MEMORY=1    # Disable auto memory (no auto memory files are created or loaded)
 export CLAUDE_CODE_DISABLE_BACKGROUND_TASKS=true
 export CLAUDE_CODE_DISABLE_CRON=1
 export CLAUDE_CODE_DISABLE_GIT_INSTRUCTIONS=true
@@ -1895,7 +1903,7 @@ export CLAUDE_CODE_DISABLE_TERMINAL_TITLE=true
 export CLAUDE_CODE_DISABLE_1M_CONTEXT=true
 export CLAUDE_CODE_DISABLE_NONSTREAMING_FALLBACK=true
 export CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION=false
-export CLAUDE_CODE_ENABLE_TASKS=true
+export CLAUDE_CODE_ENABLE_TASKS=0          # Task tools are the default; 0 reverts to the legacy TodoWrite tool
 export CLAUDE_CODE_SIMPLE=true              # Set by --bare flag
 
 # MCP configuration
@@ -1941,23 +1949,28 @@ User: /config
 
 ### プロジェクト単位の設定
 
-プロジェクトに `.claude/config.json` を作成する：
+プロジェクトに `.claude/settings.json` を作成する：
 
 ```json
 {
   "hooks": {
-    "PreToolUse": [{ "matcher": "Bash", "hooks": ["npm test && npm run lint"] }]
+    "PreToolUse": [{ "matcher": "Bash", "hooks": [{ "type": "command", "command": "npm test && npm run lint" }] }]
   },
   "permissions": {
     "defaultMode": "default"
-  },
-  "mcp": {
-    "servers": {
-      "project-db": {
-        "command": "mcp-postgres",
-        "env": {
-          "DATABASE_URL": "${PROJECT_DB_URL}"
-        }
+  }
+}
+```
+
+プロジェクトの MCP サーバはプロジェクトルートの `.mcp.json` に置く：
+
+```json
+{
+  "mcpServers": {
+    "project-db": {
+      "command": "mcp-postgres",
+      "env": {
+        "DATABASE_URL": "${PROJECT_DB_URL}"
       }
     }
   }
@@ -2083,8 +2096,8 @@ Claude Code および関連機能の詳細：
 
 ---
 
-**最終更新：** 2026 年 10 月 15 日
-**Claude Code バージョン：** 2.1.300
+**最終更新：** 2026 年 10 月 18 日
+**Claude Code バージョン：** 2.1.302
 **情報源：**
 - https://code.claude.com/docs/en/permissions
 - https://code.claude.com/docs/en/auto-mode-classifier-billing
@@ -2107,5 +2120,13 @@ Claude Code および関連機能の詳細：
 - https://code.claude.com/docs/en/settings-reference#sandbox-enabled
 - https://code.claude.com/docs/en/prompt-caching
 - https://code.claude.com/docs/en/agent-teams
+- https://code.claude.com/docs/en/hooks
+- https://code.claude.com/docs/en/managed-settings
+- https://code.claude.com/docs/en/channels
+- https://code.claude.com/docs/en/desktop
+- https://code.claude.com/docs/en/fullscreen
+- https://code.claude.com/docs/en/chrome
+- https://code.claude.com/docs/en/env-vars
+- https://code.claude.com/docs/en/changelog#2-1-302
 
 **互換モデル：** Claude Sonnet 4.6、Claude Opus 4.7、Claude Haiku 4.5

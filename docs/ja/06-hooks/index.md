@@ -104,15 +104,17 @@ Claude Code は 5 種類のフックタイプをサポートする。
 
 > v2.1.63 で追加。
 
-リモート webhook エンドポイントが、command フックと同じ JSON 入力を受け取る。HTTP フックは URL に JSON を POST し、JSON レスポンスを受け取る。サンドボックスが有効な場合、HTTP フックはサンドボックス経由でルーティングされる。URL 内の環境変数展開には、セキュリティのため明示的な `allowedEnvVars` リストが必要。
+リモート webhook エンドポイントが、command フックと同じ JSON 入力を受け取る。HTTP フックは URL に JSON を POST し、JSON レスポンスを受け取る。サンドボックスが有効な場合、HTTP フックはサンドボックス経由でルーティングされる。ヘッダー値への環境変数展開には、セキュリティのため明示的な `allowedEnvVars` リストが必要。
 
 ```json
 {
   "hooks": {
     "PostToolUse": [{
-      "type": "http",
-      "url": "https://my-webhook.example.com/hook",
-      "matcher": "Write"
+      "matcher": "Write",
+      "hooks": [{
+        "type": "http",
+        "url": "https://my-webhook.example.com/hook"
+      }]
     }]
   }
 }
@@ -122,7 +124,7 @@ Claude Code は 5 種類のフックタイプをサポートする。
 - `"type": "http"` -- HTTP フックであることを示す
 - `"url"` -- webhook エンドポイント URL
 - サンドボックスが有効ならサンドボックス経由でルーティング
-- URL 内の環境変数展開には明示的な `allowedEnvVars` リストが必要
+- `headers` の値への環境変数展開には明示的な `allowedEnvVars` リストが必要
 
 ### Prompt フック
 
@@ -150,7 +152,8 @@ LLM はプロンプトを評価し、構造化された判定を返す（詳細�
   "hooks": [{
     "type": "mcp_tool",
     "server": "my-mcp-server",
-    "tool": "validate_edit"
+    "tool": "validate_edit",
+    "input": { "file_path": "${tool_input.file_path}" }
   }]
 }
 ```
@@ -159,8 +162,9 @@ LLM はプロンプトを評価し、構造化された判定を返す（詳細�
 - `"type": "mcp_tool"` -- MCP ツールフックであることを示す
 - `"server"` -- 設定済み MCP サーバーの名前
 - `"tool"` -- そのサーバー上で呼び出すツール名
+- `"input"` -- ツールに渡す任意の引数。文字列値ではフックの JSON 入力から `${path}` 置換が使える（例：`"${tool_input.file_path}"`）
 
-フック入力（ツール名、ツール入力、セッションコンテキスト）は MCP ツールの引数として渡される。MCP サーバーの設定方法は [MCP サーバーセットアップ](../05-mcp/README.md) を参照。
+ツールの引数は `input`（`${path}` 置換付き）から作られ、フック入力がそのまま渡されるわけではない。MCP サーバーの設定方法は [MCP サーバーセットアップ](../05-mcp/README.md) を参照。
 
 ### Agent フック
 
@@ -176,7 +180,7 @@ LLM はプロンプトを評価し、構造化された判定を返す（詳細�
 
 > **注意**: Agent フックは実験的機能であり、変更される可能性がある。
 
-> **注意**: v2.1.280 以降、agent フックは `PermissionRequest` では実行されない。その応答ではリクエストを許可も拒否もできないためである。`PermissionRequest` には command、http、mcp_tool、または prompt フックを使うこと。
+> **注意**: v2.1.280 以降、agent フックは `PermissionRequest` では実行されない。その応答ではリクエストを許可も拒否もできないためである。`PermissionRequest` には判定オブジェクトを返す command フックまたは HTTP フックを使うこと（prompt フックの `ok: false` は `PermissionRequest` では効果がない）。
 
 **主要プロパティ：**
 - `"type": "agent"` -- agent フックであることを示す
@@ -260,7 +264,7 @@ Claude がツールパラメータを生成した後、処理開始前に動作�
   - `"ask"` はユーザーに確認を求める
   - `"defer"` は正常終了して後でツールを再開できるようにする。この値では `permissionDecisionReason`、`updatedInput`、`additionalContext` はいずれも無視される
   - フックが何を返しても deny／ask のルールは引き続き評価される。複数の `PreToolUse` フックの判定が食い違う場合、優先順位は `deny` > `defer` > `ask` > `allow` となる
-- `permissionDecisionReason`: 判定の理由。`"allow"` と `"ask"` では（Claude ではなく）ユーザーに表示され、`"deny"` では Claude に表示される。`"defer"` では無視される
+- `permissionDecisionReason`: 判定の理由。`"ask"` では（Claude ではなく）ユーザーに表示され、`"deny"` では Claude に表示される。`"allow"` と `"defer"` ではデバッグログにのみ記録される
 - `updatedInput`: 置き換え用のツール入力（入力オブジェクト全体を置き換える）。v2.1.300 以降は Claude 自身の入力と同様に検証され、未知のキーは破棄され、ツールが拒否する入力では呼び出しが拒否される。
 
 ### PostToolUse
@@ -504,7 +508,7 @@ hooks:
   },
   "tool_use_id": "toolu_01ABC123...",
   "agent_id": "agent-abc123",
-  "agent_type": "main",
+  "agent_type": "security-reviewer",
   "worktree": "/path/to/worktree"
 }
 ```
@@ -518,7 +522,7 @@ hooks:
 | `cwd` | カレント作業ディレクトリ |
 | `hook_event_name` | フックを発火させたイベント名 |
 | `agent_id` | このフックを実行しているエージェントの識別子 |
-| `agent_type` | エージェントタイプ（`"main"`、サブエージェントタイプ名など） |
+| `agent_type` | エージェント名（例：`"Explore"`、`"security-reviewer"`）。セッションが `--agent` を使う場合か、フックがサブエージェント内で発火した場合にのみ存在する |
 | `worktree` | エージェントが git ワークツリーで動作している場合のパス |
 
 ### 終了コード
@@ -527,7 +531,7 @@ hooks:
 |-----------|------|------|
 | **0** | 成功 | 続行、JSON stdout を解析 |
 | **2** | ブロッキングエラー | 操作をブロック、stderr をエラーとして表示 |
-| **その他** | 非ブロッキングエラー | 続行、verbose モードで stderr を表示 |
+| **その他** | 非ブロッキングエラー | 続行。トランスクリプトの `<hook name> hook error` 通知に stderr の最初の行が表示される |
 
 ### JSON 出力（stdout、終了コード 0）
 
@@ -584,12 +588,12 @@ hooks:
 **LLM レスポンススキーマ：**
 ```json
 {
-  "decision": "approve",
-  "reason": "All tasks completed successfully",
-  "continue": false,
-  "stopReason": "Task complete"
+  "ok": false,
+  "reason": "Tests were not run after the last edit"
 }
 ```
+
+`ok: true` でアクションを許可する。`ok` が `false` のときは `reason` が必須。
 
 ## 例
 
@@ -1001,15 +1005,15 @@ python3 09-advanced-features/setup-auto-mode-permissions.py
 `Stop` は Claude の *すべての* 応答後に発火する。`SessionEnd` はセッション終了時に
 1 回だけ発火する。セッション終了時の日記エントリにはまさにこれが必要である。
 
-**なぜ入力に `/dev/tty` を使うのか？**
-フックスクリプトはフック JSON ペイロードを `stdin` 経由で受け取る。そのため対話的な
-`read` はターミナルに到達するために `/dev/tty` を直接使う必要がある。
+**なぜ対話プロンプトを使わないのか？**
+フックは制御端末なしで実行されるため `/dev/tty` は使えず、フックからユーザーに入力を求めることはできない。
+モジュール（と任意のメモ）は Claude Code 起動時に環境変数で渡す（例：`CLAUDE_HOWTO_MODULES=06,07 claude`）。
 
 **ファイル：** `06-hooks/session-end.sh`
 
 ```bash
 #!/usr/bin/env bash
-# SessionEnd hook: prompts for modules worked on, then appends a session record
+# SessionEnd hook: records the modules worked on, then appends a session record
 # to ~/.claude-howto-progress.json for persistent learning progress tracking.
 
 PROGRESS_FILE="$HOME/.claude-howto-progress.json"
@@ -1026,12 +1030,10 @@ fi
 DATE=$(date +"%Y-%m-%d")
 TIME=$(date +"%H:%M")
 
-echo ""
-echo " Which modules did you work on? (e.g. 06,07 or press Enter to skip)"
-echo " 01=Slash  02=Memory  03=Skills  04=Subagents  05=MCP"
-echo " 06=Hooks  07=Plugins 08=Checkpoints 09=Advanced 10=CLI"
-printf " > "
-read -r INPUT </dev/tty
+# Modules worked on, e.g. launch with: CLAUDE_HOWTO_MODULES=06,07 claude
+# 01=Slash  02=Memory  03=Skills  04=Subagents  05=MCP
+# 06=Hooks  07=Plugins 08=Checkpoints 09=Advanced 10=CLI
+INPUT="${CLAUDE_HOWTO_MODULES:-}"
 
 if [ -z "$INPUT" ] || [ "$INPUT" = "skip" ]; then
   exit 0
@@ -1053,8 +1055,8 @@ MODULES_JSON=$(echo "$INPUT" | tr ',' '\n' | tr -d ' ' | while read -r m; do
   esac
 done | paste -sd ',' -)
 
-printf " Notes? (optional, press Enter to skip): "
-read -r NOTES </dev/tty
+# Optional notes, e.g. CLAUDE_HOWTO_NOTES="tried the pre-commit example"
+NOTES="${CLAUDE_HOWTO_NOTES:-}"
 
 # NOTES を別の引数として渡し、Python に JSON エスケープを処理させる。
 # これにより、ノートに引用符やバックスラッシュを含む場合でも JSON が壊れない。
@@ -1100,7 +1102,8 @@ chmod +x .claude/hooks/session-end.sh
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/session-end.sh\""
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/session-end.sh\"",
+            "timeout": 10
           }
         ]
       }
@@ -1108,6 +1111,8 @@ chmod +x .claude/hooks/session-end.sh
   }
 }
 ```
+
+SessionEnd フックのデフォルト予算は 1.5 秒。フックごとに `"timeout"`（秒）を設定すると予算がそれに合わせて引き上げられる（最大 60 秒）。独自の `timeout` を持たないフックは 1.5 秒でキャンセルされる。
 
 **出力 — `~/.claude-howto-progress.json`：**
 
@@ -1129,7 +1134,8 @@ chmod +x .claude/hooks/session-end.sh
 | パターン | なぜ重要か |
 |---------|-----------|
 | `SessionEnd` イベント | 終了時に 1 回だけ発火 — `Stop` のように毎応答後に発火しない |
-| `read -r INPUT </dev/tty` | フックは `stdin` を占有（JSON ペイロード）するため、ユーザー入力には `/dev/tty` を使う |
+| `INPUT="${CLAUDE_HOWTO_MODULES:-}"` | フックには端末がない（`/dev/tty` は使えない）ため、入力は環境変数から受け取る |
+| `"timeout": 10` | SessionEnd フックは独自の `timeout` がなければ 1.5 秒でキャンセルされる |
 | `$CLAUDE_PROJECT_DIR` | ポータブルなパス — `/Users/yourname/...` を絶対にハードコードしない |
 | 先頭のガード句 | グローバル設定された場合に、無関係なプロジェクトでフックが動作するのを防ぐ |
 | リポジトリ外に保存 | `~/` のパスは `git pull` でデータを上書きされず保持される |
@@ -1210,7 +1216,7 @@ MCP ツールは `mcp__<server>__<tool>` パターンに従う。
 ### セキュリティ上の注意点
 
 - **ワークスペースの信頼が必要：** `statusLine` および `fileSuggestion` のフック出力コマンドは、有効化前にワークスペースの信頼を受け入れる必要がある。
-- **HTTP フックと環境変数：** HTTP フックは URL 内で環境変数の補間を使うために明示的な `allowedEnvVars` リストを必要とする。これにより、機密の環境変数がリモートエンドポイントへ意図せず漏洩することを防ぐ。
+- **HTTP フックと環境変数：** HTTP フックはヘッダー値で環境変数の補間を使うために明示的な `allowedEnvVars` リストを必要とする。これにより、機密の環境変数がリモートエンドポイントへ意図せず漏洩することを防ぐ。
 - **管理対象設定の階層：** `disableAllHooks` 設定は管理対象設定の階層を尊重するようになった。つまり、組織レベルの設定でフック無効化を強制でき、個別ユーザーが上書きできない。
 - **PowerShell 自動承認（v2.1.119）：** PowerShell ツールコマンドは権限モードで Bash と同様に自動承認可能になった。Windows ユーザーが PowerShell バックエンドのシェルツールで Claude Code を実行する際の同等性が確保された。
 
@@ -1325,7 +1331,7 @@ echo $?
 | 項目 | 動作 |
 |------|------|
 | **タイムアウト** | command/http/mcp_tool はデフォルト 600 秒（prompt は 30 秒、agent は 60 秒）、フックごとに設定可能 |
-| **並列化** | マッチしたフックはすべて並列実行 |
+| **並列化** | マッチしたフックはすべて並列実行。v2.1.302 以降、1 つのイベントで同時に実行される prompt／agent フックは最大 12 個で、残りは順番を待つ |
 | **重複排除** | 同一のフックコマンドは重複排除される |
 | **環境** | カレントディレクトリで Claude Code の環境のもと実行 |
 
@@ -1381,8 +1387,8 @@ chmod +x ~/.claude/hooks/*.sh
 
 ---
 
-**最終更新：** 2026 年 10 月 15 日
-**Claude Code バージョン：** 2.1.300
+**最終更新：** 2026 年 10 月 18 日
+**Claude Code バージョン：** 2.1.302
 **情報源：**
 - https://code.claude.com/docs/en/hooks
 - https://code.claude.com/docs/en/plugins/manifest-reference#quoting-and-path-separators

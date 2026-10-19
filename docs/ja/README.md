@@ -141,7 +141,7 @@ Claude Code の力の 90% を眠らせたままで、しかも自分が何を知
 
 ## 15 分で始める
 
-> **インストールに関する注記**：v2.1.113 以降、Claude Code はプラットフォーム別のネイティブバイナリ（macOS / Linux / Windows）として配布される。推奨のインストール方法はネイティブインストーラー（`curl -fsSL https://claude.ai/install.sh | bash`）である。`npm install -g @anthropic-ai/claude-code` も引き続き利用可能で、インストール時にプラットフォーム別のオプション依存関係を通じて同じネイティブバイナリが取得される。v2.1.116 以降、ダウンロード元は `https://downloads.claude.ai/claude-code-releases` であり、企業プロキシではこのホストを許可リストに加える必要がある。
+> **インストールに関する注記**：v2.1.113 以降、Claude Code はプラットフォーム別のネイティブバイナリ（macOS / Linux / Windows）として配布される。推奨のインストール方法はネイティブインストーラー（`curl -fsSL https://claude.ai/install.sh | bash`）である。公式 README では npm によるインストールは非推奨とされているため、ネイティブインストーラー、Homebrew（`brew install --cask claude-code`）または WinGet（`winget install Anthropic.ClaudeCode`）を推奨する。参考までに、`npm install -g @anthropic-ai/claude-code` はインストール時にプラットフォーム別のオプション依存関係を通じて同じネイティブバイナリを取得する。v2.1.116 以降、ダウンロード元は `https://downloads.claude.ai/claude-code-releases` であり、企業プロキシではこのホストを許可リストに加える必要がある。
 
 ```bash
 # 1. ガイドをクローン
@@ -211,7 +211,7 @@ cp -r 03-skills/code-review-specialist ~/.claude/skills/
 完全パスで 11〜13 時間。ただし 15 分で即座に価値が得られる。スラッシュコマンドのテンプレートをコピーして試すだけでよい。
 
 **Claude Sonnet / Haiku / Opus と一緒に使えるか？**
-使える。すべてのテンプレートは Claude Sonnet 4.6、Claude Opus 4.7、Claude Haiku 4.5 で動作する。
+使える。すべてのテンプレートは Claude Sonnet 5.5、Claude Sonnet 4.6、Claude Opus 4.7、Claude Haiku 4.5 で動作する。
 
 **コントリビュートできるか？**
 もちろん。ガイドラインは [CONTRIBUTING.md](CONTRIBUTING.md) を参照。新しい例、バグ修正、ドキュメント改善、コミュニティテンプレートを歓迎する。
@@ -287,16 +287,15 @@ cp -r 03-skills/code-review-specialist ~/.claude/skills/
 cp 04-subagents/*.md .claude/agents/
 
 # MCP
-export GITHUB_TOKEN="token"
-claude mcp add github -- npx -y @modelcontextprotocol/server-github
+claude mcp add --transport http github https://api.githubcopilot.com/mcp/ --header "Authorization: Bearer YOUR_GITHUB_PAT"
 
 # Hooks
 mkdir -p ~/.claude/hooks
 cp 06-hooks/*.sh ~/.claude/hooks/
 chmod +x ~/.claude/hooks/*.sh
 
-# Plugins
-/plugin install pr-review
+# Plugins（リポジトリのルートからローカルプラグインを読み込む）
+claude --plugin-dir ./07-plugins/pr-review
 
 # Checkpoints (自動有効、設定で調整)
 # 08-checkpoints/README.md を参照
@@ -430,11 +429,10 @@ cp 04-subagents/*.md /path/to/project/.claude/agents/
 **インストール**：
 ```bash
 # 環境変数を設定
-export GITHUB_TOKEN="your_token"
 export DATABASE_URL="postgresql://..."
 
 # CLI で MCP サーバを追加
-claude mcp add github -- npx -y @modelcontextprotocol/server-github
+claude mcp add --transport http github https://api.githubcopilot.com/mcp/ --header "Authorization: Bearer YOUR_GITHUB_PAT"
 
 # またはプロジェクト .mcp.json に手動追加 (例は 05-mcp/ を参照)
 ```
@@ -451,7 +449,7 @@ claude mcp add github -- npx -y @modelcontextprotocol/server-github
 **概要**：Claude Code のイベントに応じて自動実行されるイベント駆動シェルコマンド
 
 **例**：
-- `format-code.sh` — 書き込み前にコードを自動整形
+- `format-code.sh` — 書き込み後にコードを自動整形
 - `pre-commit.sh` — コミット前にテストを実行
 - `security-scan.sh` — セキュリティ問題のスキャン
 - `log-bash.sh` — すべての bash コマンドをログに記録
@@ -469,14 +467,15 @@ chmod +x ~/.claude/hooks/*.sh
 ```json
 {
   "hooks": {
-    "PreToolUse": [{
-      "matcher": "Write",
-      "hooks": ["~/.claude/hooks/format-code.sh"]
-    }],
-    "PostToolUse": [{
-      "matcher": "Write",
-      "hooks": ["~/.claude/hooks/security-scan.sh"]
-    }]
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          { "type": "command", "command": "~/.claude/hooks/format-code.sh" },
+          { "type": "command", "command": "~/.claude/hooks/security-scan.sh" }
+        ]
+      }
+    ]
   }
 }
 ```
@@ -507,9 +506,10 @@ chmod +x ~/.claude/hooks/*.sh
 
 **インストール**：
 ```bash
-/plugin install pr-review
-/plugin install devops-automation
-/plugin install documentation
+# リポジトリのルートから実行（このリポジトリにはマーケットプレイスがないため /plugin install は使えない）
+claude --plugin-dir ./07-plugins/pr-review
+claude --plugin-dir ./07-plugins/devops-automation
+claude --plugin-dir ./07-plugins/documentation
 ```
 
 **使い方**：バンドルされたスラッシュコマンドや機能を利用する
@@ -534,12 +534,13 @@ chmod +x ~/.claude/hooks/*.sh
 # 巻き戻しは Esc を 2 回押すか、次を実行:
 /rewind
 
-# 5 つの選択肢から選ぶ:
+# 6 つの選択肢から選ぶ:
 # 1. コードと会話を復元
 # 2. 会話のみ復元
 # 3. コードのみ復元
 # 4. ここから要約
-# 5. やめる
+# 5. ここまでを要約
+# 6. やめる
 ```
 
 **ユースケース**：
@@ -874,8 +875,8 @@ MIT License — [LICENSE](../LICENSE) を参照。利用、変更、再配布は
 
 ---
 
-**最終更新**：2026 年 10 月 15 日
-**Claude Code バージョン**：2.1.300
+**最終更新**：2026 年 10 月 18 日
+**Claude Code バージョン**：2.1.302
 **情報源**：
 - https://code.claude.com/docs/en/tools-reference#task-tool-availability
 - https://code.claude.com/docs/en/hooks
@@ -884,4 +885,9 @@ MIT License — [LICENSE](../LICENSE) を参照。利用、変更、再配布は
 - https://github.com/anthropics/claude-code/releases/tag/v2.1.119
 - https://github.com/anthropics/claude-code/releases/tag/v2.1.113
 - https://code.claude.com/docs/en/setup
+- https://code.claude.com/docs/en/mcp
+- https://code.claude.com/docs/en/plugins/install
+- https://code.claude.com/docs/en/checkpointing
+- https://code.claude.com/docs/en/model-config
+- https://github.com/anthropics/claude-code
 **互換モデル**：Claude Sonnet 4.6、Claude Opus 4.7、Claude Haiku 4.5

@@ -229,7 +229,7 @@ sequenceDiagram
 | `ENABLE_TOOL_SEARCH` | `true` | すべての MCP ツールを遅延 |
 | `ENABLE_TOOL_SEARCH` | `false` | 無効。すべてのツールの説明が完全な形で送信される |
 
-> **注意：** ツール検索には `tool_reference` ブロックをサポートするモデルが必要：Claude Sonnet 4.5、Claude Haiku 4.5、Claude Opus 4.5、およびそれ以降のモデル。
+> **注意：** ツール検索には `tool_reference` ブロックをサポートするモデルが必要：Claude Opus 4、Claude Sonnet 4、Claude Haiku 4.5、およびそれ以降のモデル（Google Cloud の Agent Platform では Opus 4.5、Sonnet 4.5、Haiku 4.5 以降）。
 
 ## 動的ツール更新
 
@@ -292,7 +292,7 @@ Claude Code は `local` を使う。
 
 ```bash
 # Project スコープ — .mcp.json に書き込まれ、チームで共有される
-claude mcp add --scope project --transport http github https://api.github.com/mcp
+claude mcp add --scope project --transport http github https://api.githubcopilot.com/mcp/ --header "Authorization: Bearer YOUR_GITHUB_PAT"
 
 # User スコープ — すべてのプロジェクトで利用できる
 claude mcp add --scope user --transport stdio memory -- npx @modelcontextprotocol/server-memory
@@ -307,7 +307,10 @@ claude mcp add --scope user --transport stdio memory -- npx @modelcontextprotoco
   "mcpServers": {
     "github": {
       "type": "http",
-      "url": "https://api.github.com/mcp"
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": {
+        "Authorization": "Bearer ${GITHUB_PERSONAL_ACCESS_TOKEN}"
+      }
     }
   }
 }
@@ -321,7 +324,7 @@ claude mcp add --scope user --transport stdio memory -- npx @modelcontextprotoco
 
 ```bash
 # HTTP ベースのサーバーを追加
-claude mcp add --transport http github https://api.github.com/mcp
+claude mcp add --transport http github https://api.githubcopilot.com/mcp/ --header "Authorization: Bearer YOUR_GITHUB_PAT"
 
 # ローカル stdio サーバーを追加
 claude mcp add --transport stdio database -- npx @company/db-server
@@ -365,10 +368,10 @@ claude mcp add-from-claude-desktop
 {
   "mcpServers": {
     "github": {
-      "command": "npx",
-      "args": ["@modelcontextprotocol/server-github"],
-      "env": {
-        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": {
+        "Authorization": "Bearer ${GITHUB_PERSONAL_ACCESS_TOKEN}"
       }
     }
   }
@@ -417,9 +420,9 @@ Reviewers: @bob, @charlie
 
 **セットアップ：**
 ```bash
-export GITHUB_TOKEN="your_github_token"
+export GITHUB_PERSONAL_ACCESS_TOKEN="your_github_token"
 # または CLI で直接追加:
-claude mcp add --transport stdio github -- npx @modelcontextprotocol/server-github
+claude mcp add --transport http github https://api.githubcopilot.com/mcp/ --header "Authorization: Bearer YOUR_GITHUB_PAT"
 ```
 
 ### 設定での環境変数展開
@@ -461,10 +464,7 @@ MCP 設定は環境変数の展開とフォールバックデフォルトをサ�
   "mcpServers": {
     "database": {
       "command": "npx",
-      "args": ["@modelcontextprotocol/server-database"],
-      "env": {
-        "DATABASE_URL": "${DATABASE_URL}"
-      }
+      "args": ["-y", "@bytebase/dbhub", "--dsn", "${DATABASE_URL}"]
     }
   }
 }
@@ -494,8 +494,8 @@ ORDER BY order_count DESC;
 **セットアップ：**
 ```bash
 export DATABASE_URL="postgresql://user:pass@localhost/mydb"
-# または CLI で直接追加:
-claude mcp add --transport stdio database -- npx @modelcontextprotocol/server-database
+claude mcp add --transport stdio database -- npx -y @bytebase/dbhub \
+  --dsn "$DATABASE_URL"
 ```
 
 ### 例 3：マルチ MCP ワークフロー
@@ -547,9 +547,10 @@ Final Output:
 
 **セットアップ：**
 ```bash
-export GITHUB_TOKEN="your_github_token"
+export GITHUB_PERSONAL_ACCESS_TOKEN="your_github_token"
 export DATABASE_URL="postgresql://user:pass@localhost/mydb"
-export SLACK_TOKEN="your_slack_token"
+export SLACK_BOT_TOKEN="your_slack_bot_token"
+export SLACK_TEAM_ID="your_slack_team_id"
 # 各 MCP サーバーを CLI で追加するか、.mcp.json で設定する
 ```
 
@@ -630,9 +631,10 @@ sequenceDiagram
 
 ```bash
 # ~/.bashrc or ~/.zshrc
-export GITHUB_TOKEN="ghp_xxxxxxxxxxxxx"
+export GITHUB_PERSONAL_ACCESS_TOKEN="ghp_xxxxxxxxxxxxx"
 export DATABASE_URL="postgresql://user:pass@localhost/mydb"
-export SLACK_TOKEN="xoxb-xxxxxxxxxxxxx"
+export SLACK_BOT_TOKEN="your-slack-bot-token"
+export SLACK_TEAM_ID="T0000000000"
 ```
 
 そして MCP 設定で参照する。
@@ -640,7 +642,7 @@ export SLACK_TOKEN="xoxb-xxxxxxxxxxxxx"
 ```json
 {
   "env": {
-    "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+    "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
   }
 }
 ```
@@ -753,6 +755,8 @@ MCP サーバーはエージェントのフロントマター内で `mcpServers:
 
 ```yaml
 ---
+name: my-tool-agent
+description: Uses my-tool for specialized operations
 mcpServers:
   my-tool:
     type: http
@@ -771,7 +775,7 @@ Claude Code はコンテキストオーバーフローを防ぐため、MCP ツ�
 | 上限 | しきい値 | 動作 |
 |------|----------|------|
 | **警告** | 10,000 トークン | 出力が大きいことを示す警告を表示 |
-| **デフォルト最大値** | 25,000 トークン | この上限を超えた出力は切り詰められる |
+| **デフォルト最大値** | 25,000 トークン | この上限を超えた出力はファイルに保存され、会話にはそのファイルパスが入る |
 | **ディスク永続化** | 50,000 文字 | 50K 文字を超えるツール結果はディスクに永続化される |
 
 最大出力上限は `MAX_MCP_OUTPUT_TOKENS` 環境変数で設定可能。
@@ -1044,7 +1048,7 @@ MCPorter は上述のコード実行アプローチを補完するもので、MC
 
 1. **最初の MCP サーバーを追加**（例：GitHub）：
 ```bash
-claude mcp add --transport stdio github -- npx @modelcontextprotocol/server-github
+claude mcp add --transport http github https://api.githubcopilot.com/mcp/ --header "Authorization: Bearer YOUR_GITHUB_PAT"
 ```
 
    または、プロジェクトルートに `.mcp.json` ファイルを作成：
@@ -1052,10 +1056,10 @@ claude mcp add --transport stdio github -- npx @modelcontextprotocol/server-gith
 {
   "mcpServers": {
     "github": {
-      "command": "npx",
-      "args": ["@modelcontextprotocol/server-github"],
-      "env": {
-        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": {
+        "Authorization": "Bearer ${GITHUB_PERSONAL_ACCESS_TOKEN}"
       }
     }
   }
@@ -1064,7 +1068,7 @@ claude mcp add --transport stdio github -- npx @modelcontextprotocol/server-gith
 
 2. **環境変数を設定：**
 ```bash
-export GITHUB_TOKEN="your_github_personal_access_token"
+export GITHUB_PERSONAL_ACCESS_TOKEN="your_github_personal_access_token"
 ```
 
 3. **接続をテスト：**
@@ -1087,7 +1091,7 @@ npm install -g @modelcontextprotocol/server-github
 
 **Database MCP：**
 ```bash
-npm install -g @modelcontextprotocol/server-database
+npm install -g @bytebase/dbhub
 ```
 
 **Filesystem MCP：**
@@ -1095,7 +1099,7 @@ npm install -g @modelcontextprotocol/server-database
 npm install -g @modelcontextprotocol/server-filesystem
 ```
 
-**Slack MCP：**
+**Slack MCP（非推奨パッケージ）：**
 ```bash
 npm install -g @modelcontextprotocol/server-slack
 ```
@@ -1114,10 +1118,10 @@ npm install -g @modelcontextprotocol/server-github
 ### 認証失敗
 ```bash
 # 環境変数が設定されているか確認
-echo $GITHUB_TOKEN
+echo $GITHUB_PERSONAL_ACCESS_TOKEN
 
 # 必要なら再設定
-export GITHUB_TOKEN="your_token"
+export GITHUB_PERSONAL_ACCESS_TOKEN="your_token"
 
 # トークンが正しい権限を持つか確認
 # GitHub のトークンスコープは https://github.com/settings/tokens で確認
@@ -1165,8 +1169,8 @@ export GITHUB_TOKEN="your_token"
 
 ---
 
-**最終更新：** 2026 年 10 月 15 日
-**Claude Code バージョン：** 2.1.300
+**最終更新：** 2026 年 10 月 18 日
+**Claude Code バージョン：** 2.1.302
 **情報源：**
 - https://code.claude.com/docs/en/mcp
 - https://code.claude.com/docs/en/mcp#configure-tool-search
@@ -1177,4 +1181,5 @@ export GITHUB_TOKEN="your_token"
 - https://github.com/anthropics/claude-code/releases/tag/v2.1.296
 - https://code.claude.com/docs/en/mcp#tool-search-for-mcp-server-authors
 - https://code.claude.com/docs/en/mcp#environment-variable-expansion-in-mcp-json
+- https://code.claude.com/docs/en/sub-agents
 **対応モデル：** Claude Sonnet 4.6、Claude Opus 4.7、Claude Haiku 4.5

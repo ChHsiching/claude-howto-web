@@ -47,7 +47,7 @@ cp 04-subagents/code-reviewer.md .claude/agents/
 ### MCP
 ```bash
 # 認証情報を設定
-export GITHUB_TOKEN="your_token"
+export GITHUB_PERSONAL_ACCESS_TOKEN="your_token"
 export DATABASE_URL="postgresql://..."
 
 # 設定をインストール (プロジェクトスコープ)
@@ -98,7 +98,7 @@ chmod +x ~/.claude/hooks/*.sh
 # plan           - 読み取り専用分析、変更なし
 # dontAsk        - 事前承認済みのツールのみ実行、それ以外はすべて拒否
 # auto           - バックグラウンド分類器が自動的に権限を判断
-# bypassPermissions - すべて承認 (--dangerously-skip-permissions が必要)
+# bypassPermissions - すべて承認 (--permission-mode bypassPermissions。--dangerously-skip-permissions も同等)
 
 # セッション管理
 /resume                # 過去の会話を再開
@@ -263,15 +263,15 @@ export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
 # 5 分ごとにコマンドを実行
 /loop 5m /check-status
 
-# 一回限りのリマインダー
-/loop 30m "remind me to check the deploy"
+# 一回限りのリマインダー：普通の言葉で頼む（/loop はキャンセルするまで繰り返す）
+30 分後にデプロイを確認するようリマインドして
 ```
 
 ---
 
 ## 📁 ファイル配置リファレンス
 
-```
+```text
 Your Project/
 ├── .claude/
 │   ├── commands/              # スラッシュコマンドはここ
@@ -291,9 +291,12 @@ User Home/
 │   ├── skills/                # 個人スキル
 │   ├── hooks/                 # フックスクリプト
 │   ├── settings.json          # ユーザー設定
-│   ├── managed-settings.d/    # 管理設定 (エンタープライズ / 組織)
 │   └── CLAUDE.md              # 個人メモリ
 └── .claude.json               # 個人 MCP 設定 (ユーザースコープ)
+
+システムディレクトリ/          # macOS /Library/Application Support/ClaudeCode/、Linux /etc/claude-code/、Windows C:\Program Files\ClaudeCode\
+├── managed-settings.json      # 管理設定 (エンタープライズ / 組織)
+└── managed-settings.d/        # 管理設定のドロップイン
 ```
 
 ---
@@ -354,7 +357,7 @@ cp 04-subagents/code-reviewer.md .claude/agents/
 ### 4〜5 日目
 ```bash
 # MCP をセットアップ
-export GITHUB_TOKEN="your_token"
+export GITHUB_PERSONAL_ACCESS_TOKEN="your_token"
 cp 05-mcp/github-mcp.json .mcp.json
 
 # MCP コマンドを試す
@@ -399,7 +402,7 @@ cp -r 03-skills/code-review-specialist ~/.claude/skills/
 | **タスクリスト** | バックグラウンドタスクの管理 | `/tasks`（エイリアス `/bashes`） |
 | **Auto Memory** | 会話からの自動メモリ保存 | Claude が `~/.claude/projects/<project>/memory/MEMORY.md` にメモを保存。`/memory` で管理 |
 | **Git ワークツリー** | 並列開発のための隔離ワークスペース | `claude --worktree <name>`（または `-w`） |
-| **モデル選択** | Fable 5.1、Fable 5、Opus 5、Sonnet 5、Sonnet 4.6、Opus 4.8、Haiku 4.5 を切替 | `/model` または `--model` フラグ |
+| **モデル選択** | Fable 5.1、Fable 5、Opus 5、Sonnet 5.5、Sonnet 5、Sonnet 4.6、Opus 4.8、Haiku 4.5 を切替 | `/model` または `--model` フラグ（Anthropic API では `sonnet` は Sonnet 5.5 を指す、v2.1.284+） |
 | **Agent Teams** | タスク上の複数エージェントを協調 | 環境変数 `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` で有効化（実験的） |
 | **スケジュールタスク** | `/loop` による反復タスク | `/loop 5m /command` または CronCreate ツール |
 | **Chrome 連携** | ブラウザ自動化 | `--chrome` フラグまたは `/chrome` コマンド |
@@ -431,7 +434,7 @@ ls -la .claude/agents/
 head -20 .claude/agents/code-reviewer.md
 
 # MCP 接続をテスト
-echo $GITHUB_TOKEN
+echo $GITHUB_PERSONAL_ACCESS_TOKEN
 ```
 
 ---
@@ -506,8 +509,8 @@ A：もちろん。カスタマイズ用のテンプレートである。
 **このカード**：手元に置いてクイックリファレンスとして！
 
 ---
-**最終更新**：2026 年 10 月 15 日
-**Claude Code バージョン**：2.1.300
+**最終更新**：2026 年 10 月 18 日
+**Claude Code バージョン**：2.1.302
 **情報源**：
 - https://code.claude.com/docs/en/overview
 - https://code.claude.com/docs/en/hooks
@@ -517,4 +520,8 @@ A：もちろん。カスタマイズ用のテンプレートである。
 - https://code.claude.com/docs/en/remote-control
 - https://code.claude.com/docs/en/agent-teams
 - https://code.claude.com/docs/en/memory#storage-location
+- https://code.claude.com/docs/en/permission-modes
+- https://code.claude.com/docs/en/managed-settings
+- https://code.claude.com/docs/en/scheduled-tasks
+- https://code.claude.com/docs/en/model-config
 **互換モデル**：Claude Fable 5、Claude Opus 5、Claude Sonnet 5、Claude Sonnet 4.6、Claude Opus 4.8、Claude Haiku 4.5

@@ -55,7 +55,7 @@
 5. **Summarize up to here** -- 逆方向の対応物。選択点より *前* のすべてを AI 生成のサマリに圧縮し、そこ以降のメッセージはそのまま残す。「Summarize from here」と合わせて、コンテキストウィンドウを双方向かつ狙った範囲で圧縮できる。ディスク上のファイルは変更されず、元のメッセージはセッショントランスクリプトに保存される。
 6. **Never mind** -- 操作をキャンセルし、現在の状態に戻る
 
-> **注意**: 会話を復元または要約した後、選択したメッセージの元のプロンプトが入力欄に復元され、再送信や編集ができる状態になる。
+> **注意**: 会話を復元した後、または「Summarize from here」を選んだ後は、選択したメッセージの元のプロンプトが入力欄に復元され、再送信や編集ができる状態になる。「Summarize up to here」を選んだ場合は会話の末尾に戻り、入力欄は空のままになる。
 
 ## 自動チェックポイント
 
@@ -229,14 +229,14 @@ Claude Code はチェックポイントを自動管理する：
 
 Claude Code がスナップショットを保持するのは **直近 100 件のチェックポイント** までで、それより古いものは保持期間内であっても削除される。
 
-> **v2.1.117 のアップデート**: `cleanupPeriodDays` がチェックポイントだけでなく、ディスク上の 4 種類のキャッシュの保持期間を統合的に制御するようになった：
+> **v2.1.117 のアップデート**: `cleanupPeriodDays` がチェックポイントだけでなく、ディスク上の多くのキャッシュの保持期間を統合的に制御するようになった（以下はその一部。トランスクリプト、`file-history/`、`plans/`、`debug/`、`paste-cache/` なども対象）：
 >
 > - セッションチェックポイント
 > - `~/.claude/tasks/` — 永続的なタスクリスト
 > - `~/.claude/shell-snapshots/` — 取得済みのシェル環境スナップショット
-> - `~/.claude/backups/` — 設定ファイル / CLAUDE.md の循環バックアップ
+> - `~/.claude/backups/` — `~/.claude.json` の以前のバージョン（最新 5 件を保持）
 >
-> 1 つの設定で 4 つのディレクトリが同じ日数で一律に整理される。
+> 1 つの設定でこれらのディレクトリが同じ日数で一律に整理される。
 
 ## 制限事項
 
@@ -333,11 +333,12 @@ Claude Code がスナップショットを保持するのは **直近 100 件の
 
 ---
 
-**最終更新**: 2026 年 10 月 15 日
-**Claude Code バージョン**: 2.1.300
+**最終更新**: 2026 年 10 月 18 日
+**Claude Code バージョン**: 2.1.302
 **出典**:
 - https://code.claude.com/docs/en/checkpointing
 - https://code.claude.com/docs/en/settings
 - https://github.com/anthropics/claude-code/releases/tag/v2.1.117
 - https://code.claude.com/docs/en/commands
+- https://code.claude.com/docs/en/claude-directory
 **対応モデル**: Claude Sonnet 4.6、Claude Opus 4.7、Claude Haiku 4.5
