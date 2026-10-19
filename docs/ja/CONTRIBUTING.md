@@ -83,8 +83,9 @@ uv pip install -r scripts/requirements-dev.txt
 # Markdown リンタ（Node.js）
 npm install -g markdownlint-cli
 
-# Mermaid 図バリデータ（Node.js）
-npm install -g @mermaid-js/mermaid-cli
+# Mermaid 図は Pele でレンダリングする。Node.js >= 20 が必要（グローバルに
+# インストールするものはない）。バージョンを確認する：
+node --version
 
 # pre-commit をインストールしてフックを有効化
 uv pip install pre-commit
@@ -96,6 +97,8 @@ pre-commit install
 ```bash
 pre-commit run --all-files
 ```
+
+初回の実行では、Mermaid フック用の Node.js 22（pre-commit が用意するため、システムに Node.js がなくても動作する）と、固定バージョンの Pele バンドルが `scripts/.vendor-cache/pele/` にダウンロードされる。以降の実行はオフラインで動作する。Mermaid フックは厳格モードで実行され、Pele を実行できない場合は失敗する。初回ダウンロード前にオフラインでコミットするには、`SKIP=mermaid,vietnamese-mermaid,japanese-mermaid` でスキップする。
 
 各コミットで実行されるフックは以下のとおり：
 
