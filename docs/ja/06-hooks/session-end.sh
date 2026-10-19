@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# SessionEnd フック：取り組んだモジュールを尋ね、~/.claude-howto-progress.json に
+# SessionEnd フック：取り組んだモジュールを記録し、~/.claude-howto-progress.json に
 # セッション記録を追記して、学習進捗を永続的に追跡する。
 #
 # Claude Code セッション終了時に 1 回だけ発火する（応答ごとではない）。
-# 標準入力にはフックの JSON ペイロードが流れているため、対話入力には /dev/tty を使う。
+# フックは制御端末なしで実行され /dev/tty は使えないため、モジュールとメモは
+# 環境変数 CLAUDE_HOWTO_MODULES / CLAUDE_HOWTO_NOTES から受け取る。
 #
 # 導入：.claude/settings.json の "SessionEnd" イベントに登録する（下記参照）。
 
@@ -28,12 +29,10 @@ echo " Claude Code — 学習セッション終了"
 echo " $DATE $TIME"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-echo " どのモジュールに取り組みましたか？（例：06,07 / Enter でスキップ）"
-echo " 01=Slash  02=Memory  03=Skills  04=Subagents  05=MCP"
-echo " 06=Hooks  07=Plugins 08=Checkpoints 09=Advanced 10=CLI"
-echo ""
-printf " > "
-read -r INPUT </dev/tty
+# 取り組んだモジュール。例：CLAUDE_HOWTO_MODULES=06,07 claude で起動する
+# 01=Slash  02=Memory  03=Skills  04=Subagents  05=MCP
+# 06=Hooks  07=Plugins 08=Checkpoints 09=Advanced 10=CLI
+INPUT="${CLAUDE_HOWTO_MODULES:-}"
 
 if [ -z "$INPUT" ] || [ "$INPUT" = "skip" ]; then
   echo " スキップ — セッションは記録しません。"
@@ -62,8 +61,8 @@ for m in "${PARTS[@]}"; do
   MODULES_JSON="${MODULES_JSON:+$MODULES_JSON,}$label"
 done
 
-printf " メモ？（任意、Enter でスキップ）: "
-read -r NOTES </dev/tty
+# 任意のメモ。例：CLAUDE_HOWTO_NOTES="pre-commit の例を試した"
+NOTES="${CLAUDE_HOWTO_NOTES:-}"
 
 # NOTES は別引数で Python に渡し、JSON エスケープを Python 側に任せる。
 # メモに引用符やバックスラッシュが含まれても JSON が壊れないようにするため。

@@ -102,7 +102,7 @@ Remember that we always use TypeScript strict mode in this project.
 Please add to memory: prefer async/await over promise chains.
 ```
 
-Claude は依頼内容に基づき適切な CLAUDE.md ファイルを更新する。
+Claude に何かを覚えるよう頼むと、自動メモリに保存される。代わりに CLAUDE.md を変更したい場合は「これを CLAUDE.md に追加して」と頼むか、`/memory` でファイルを直接編集する。
 
 **履歴用メモ**（現在は機能しない）:
 
@@ -280,13 +280,13 @@ graph TD
 // In ~/.claude/settings.json or .claude/settings.json
 {
   "claudeMdExcludes": [
-    "packages/legacy-app/CLAUDE.md",
-    "vendors/**/CLAUDE.md"
+    "**/packages/legacy-app/CLAUDE.md",
+    "**/vendors/**/CLAUDE.md"
   ]
 }
 ```
 
-パターンはプロジェクトルートからの相対パスに対して照合される。とくに次の場合に有用である:
+パターンは glob 構文で絶対ファイルパスに対して照合されるため、リポジトリ内のパターンは `**/` で始める。とくに次の場合に有用である:
 
 - 多くのサブプロジェクトを抱えるモノレポで、関連するのが一部のみのとき
 - ベンダー製・サードパーティ製の CLAUDE.md を含むリポジトリ
@@ -318,7 +318,7 @@ Claude Code の設定（`autoMemoryDirectory`、`claudeMdExcludes` などを含�
 
 | 設定 | 型 | デフォルト | 説明 |
 |------|---|---------|------|
-| `cleanupPeriodDays` | 整数（日） | 30 | ディスク上の成果物の保持期間。**v2.1.117 から**、checkpoints（`~/.claude/checkpoints/`）、tasks（`~/.claude/tasks/`）、shell-snapshots（`~/.claude/shell-snapshots/`）、backups（`~/.claude/backups/`）の 4 種すべてに適用される。期間より古いファイルは起動時に削除される。 |
+| `cleanupPeriodDays` | 整数（日） | 30 | セッショントランスクリプトおよび `~/.claude/` 配下のその他のアプリケーションデータの保持期間。`file-history/`（チェックポイントのスナップショット）、`plans/`、`debug/`、`tasks/`、`shell-snapshots/`、`backups/` などが対象となる。`~/.claude/checkpoints/` というフォルダは存在しない。期間より古いファイルは起動時に削除される。 |
 
 ```jsonc
 // ~/.claude/settings.json
@@ -331,24 +331,26 @@ Claude Code の設定（`autoMemoryDirectory`、`claudeMdExcludes` などを含�
 
 | 設定 | 型 | 説明 |
 |------|---|------|
-| `attribution.commit` | boolean | Claude が作成したコミットに `Co-Authored-By: Claude` トレーラを追加。非推奨の `includeCoAuthoredBy` フラグを置き換え。 |
-| `attribution.pr` | boolean | プルリクエストの説明に Claude の帰属表示を追加。PR について非推奨の `includeCoAuthoredBy` フラグを置き換え。 |
+| `attribution.commit` | string | Claude が作成したコミットに追加するテキスト（既定は `Co-Authored-By: Claude` トレーラ）。`""` で非表示。非推奨の `includeCoAuthoredBy` フラグを置き換え。 |
+| `attribution.pr` | string | Claude が作成したプルリクエストの説明に追加するテキスト。`""` で非表示。PR について非推奨の `includeCoAuthoredBy` フラグを置き換え。 |
 | `voice.enabled` | boolean | プッシュトゥトーク音声入力（`/voice`）を有効化。非推奨の `voiceEnabled` フラグを置き換え。 |
-| `prUrlTemplate` | string | **v2.1.119 で新規。** フッターの PR バッジ用カスタム URL テンプレート。GitLab、Bitbucket、社内コードレビュー基盤などで有用。`{{owner}}`、`{{repo}}`、`{{number}}` プレースホルダをサポート。 |
+| `prUrlTemplate` | string | **v2.1.119 で新規。** フッターの PR バッジ用カスタム URL テンプレート。GitLab、Bitbucket、社内コードレビュー基盤などで有用。`{host}`、`{owner}`、`{repo}`、`{number}`、`{url}` プレースホルダをサポート。GitLab のマージリクエストリンクは変更されない。 |
 
 ```jsonc
 // ~/.claude/settings.json
 {
   "attribution": {
-    "commit": false,
-    "pr": true
+    "commit": "",
+    "pr": ""
   },
   "voice": {
     "enabled": true
   },
-  "prUrlTemplate": "https://gitlab.internal/{{owner}}/{{repo}}/-/merge_requests/{{number}}"
+  "prUrlTemplate": "https://reviews.example.com/{owner}/{repo}/pull/{number}"
 }
 ```
+
+空文字列（`""`）でその帰属表示を非表示にでき、`"attribution": false` ですべて非表示になる（v2.1.281+）。
 
 #### 非推奨となった設定キー
 
@@ -441,10 +443,10 @@ sequenceDiagram
     participant Editor as File System
     participant Memory as CLAUDE.md
 
-    User->>Claude: "Remember: use async/await"
+    User->>Claude: "Add async/await rule to CLAUDE.md"
     Claude->>User: "Which memory file?"
     User->>Claude: "Project memory"
-    Claude->>Editor: Open ~/.claude/settings.json
+    Claude->>Editor: Open ./CLAUDE.md
     Claude->>Memory: Write to ./CLAUDE.md
     Memory-->>Claude: File saved
     Claude->>Claude: Load updated memory
@@ -453,15 +455,15 @@ sequenceDiagram
 
 ## 自動メモリ（Auto Memory）
 
-自動メモリは、Claude がプロジェクトでの作業中に学んだ内容、パターン、洞察を自動で記録する永続ディレクトリである。手動で書いて維持する CLAUDE.md ファイルとは異なり、自動メモリはセッション中に Claude 自身が書き込む。
+自動メモリは、Claude がプロジェクトでの作業中に型付きのメモ（`user`、`feedback`、`project`、`reference`）を自動で保存する永続ディレクトリである。アーキテクチャ、ファイルパス、デバッグの修正内容など、コードベースから導けるものは保存しない。手動で書いて維持する CLAUDE.md ファイルとは異なり、自動メモリはセッション中に Claude 自身が書き込む。
 
 ### 自動メモリの仕組み
 
 - **場所**: `~/.claude/projects/<project>/memory/`
 - **エントリポイント**: `MEMORY.md` が自動メモリディレクトリのメインファイルとして機能する
-- **トピックファイル**: 特定の主題向けのオプションファイル（例: `debugging.md`、`api-conventions.md`）
+- **トピックファイル**: メモリごとに 1 つのオプションファイル（例: `prefers-pnpm.md`、`release-checklist.md`）
 - **ロード挙動**: セッション開始時に `MEMORY.md` の最初の 200 行（または最初の 25KB のうち先に達したほう）がコンテキストにロードされる。トピックファイルは起動時ではなくオンデマンドでロードされる
-- **読み書き**: Claude はパターンやプロジェクト固有の知識を発見しながら、セッション中にメモリファイルを読み書きする
+- **読み書き**: Claude はユーザーの好み、フィードバック、プロジェクトの文脈を学びながら、セッション中にメモリファイルを読み書きする
 
 ### 自動メモリのアーキテクチャ
 
@@ -469,11 +471,11 @@ sequenceDiagram
 graph TD
     A["Claude Session Starts"] --> B["Load MEMORY.md<br/>(first 200 lines / 25KB)"]
     B --> C["Session Active"]
-    C --> D["Claude discovers<br/>patterns & insights"]
+    C --> D["Claude learns<br/>preferences & feedback"]
     D --> E{"Write to<br/>auto memory"}
     E -->|General notes| F["MEMORY.md"]
-    E -->|Topic-specific| G["debugging.md"]
-    E -->|Topic-specific| H["api-conventions.md"]
+    E -->|Topic-specific| G["prefers-pnpm.md"]
+    E -->|Topic-specific| H["release-checklist.md"]
     C --> I["On-demand load<br/>topic files"]
     I --> C
 
@@ -493,9 +495,9 @@ graph TD
 ```
 ~/.claude/projects/<project>/memory/
 ├── MEMORY.md              # Entrypoint (first 200 lines / 25KB loaded at startup)
-├── debugging.md           # Topic file (loaded on demand)
-├── api-conventions.md     # Topic file (loaded on demand)
-└── testing-patterns.md    # Topic file (loaded on demand)
+├── prefers-pnpm.md        # Topic file (loaded on demand)
+├── release-checklist.md   # Topic file (loaded on demand)
+└── team-contacts.md       # Topic file (loaded on demand)
 ```
 
 ### バージョン要件
@@ -511,13 +513,13 @@ npm install -g @anthropic-ai/claude-code@latest
 デフォルトでは自動メモリは `~/.claude/projects/<project>/memory/` に保存される。`autoMemoryDirectory` 設定（**v2.1.74** 以降で利用可能）で場所を変更できる:
 
 ```jsonc
-// In ~/.claude/settings.json or .claude/settings.local.json (user/local settings only)
+// In any settings file: user, project, local, or managed policy
 {
   "autoMemoryDirectory": "/path/to/custom/memory/directory"
 }
 ```
 
-> **注意**: `autoMemoryDirectory` はユーザーレベル（`~/.claude/settings.json`）またはローカル設定（`.claude/settings.local.json`）でのみ設定でき、プロジェクト設定や管理ポリシー設定には設定できない。
+> **注意**: `autoMemoryDirectory` はすべての設定スコープ（ユーザー、プロジェクト、ローカル、管理ポリシー、`--settings`）から読み込まれる。値は絶対パスか `~/` で始まるパスでなければならない。
 
 これは次のような用途で便利である:
 
@@ -822,12 +824,12 @@ Claude に新しいルールを保存するよう依頼する。
 
 ### 例 4: セッション中のメモリ更新
 
-アクティブな Claude Code セッション中にメモリへ新しいルールを追加できる。方法は 2 つある。
+アクティブな Claude Code セッション中に CLAUDE.md へ新しいルールを追加できる（Claude に「覚えて」と頼むと、代わりに自動メモリに保存される）。方法は 2 つある。
 
 #### 方法 1: 直接依頼
 
 ```markdown
-User: Remember that I prefer using React hooks instead of class components
+User: Add this to CLAUDE.md: I prefer using React hooks instead of class components
      for all new components.
 
 Claude: I'm adding that to your memory. Which memory file should this go in?
@@ -1204,8 +1206,8 @@ Claude はどのメモリファイルを更新するかを尋ねる。
 - [公式メモリドキュメント](https://code.claude.com/docs/en/memory) — Anthropic ドキュメント
 
 ---
-**最終更新**: 2026 年 10 月 15 日
-**Claude Code バージョン**: 2.1.300
+**最終更新**: 2026 年 10 月 18 日
+**Claude Code バージョン**: 2.1.302
 **Sources**:
 - https://code.claude.com/docs/en/memory
 - https://code.claude.com/docs/en/memory#agents-md
@@ -1215,4 +1217,6 @@ Claude はどのメモリファイルを更新するかを尋ねる。
 - https://github.com/anthropics/claude-code/releases/tag/v2.1.288
 - https://github.com/anthropics/claude-code/releases/tag/v2.1.293
 - https://code.claude.com/docs/en/sub-agents#enable-persistent-memory
+- https://code.claude.com/docs/en/settings-reference
+- https://code.claude.com/docs/en/claude-directory
 **Compatible Models**: Claude Sonnet 4.6, Claude Opus 4.7, Claude Haiku 4.5

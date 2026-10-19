@@ -98,7 +98,7 @@ graph TD
 
 | ステップ | 機能 | 複雑度 | 時間 | レベル | 依存 | 学ぶ理由 | 主な利点 |
 |------|---------|-----------|------|-------|--------------|----------------|--------------|
-| **1** | [スラッシュコマンド](01-slash-commands/) | ⭐ 初級 | 30 分 | レベル 1 | なし | すぐ得られる生産性向上（組み込み 55 個 + バンドル 5 スキル） | 即時自動化、チーム標準化 |
+| **1** | [スラッシュコマンド](01-slash-commands/) | ⭐ 初級 | 30 分 | レベル 1 | なし | すぐ得られる生産性向上（組み込み 55 個 + バンドル 20 スキル） | 即時自動化、チーム標準化 |
 | **2** | [メモリ](02-memory/) | ⭐⭐ 初級+ | 45 分 | レベル 1 | なし | 全機能の基礎 | 永続コンテキスト、設定保持 |
 | **3** | [チェックポイント](08-checkpoints/) | ⭐⭐ 中級 | 45 分 | レベル 1 | セッション管理 | 安全な探索 | 実験、復旧 |
 | **4** | [CLI 基礎](10-cli/) | ⭐⭐ 初級+ | 30 分 | レベル 1 | なし | コア CLI の使い方 | 対話モード・印字モード |
@@ -303,8 +303,7 @@ chmod +x ~/.claude/hooks/pre-tool-check.sh
 
 ```bash
 # 演習 1: GitHub MCP をセットアップ
-export GITHUB_TOKEN="your_github_token"
-claude mcp add github -- npx -y @modelcontextprotocol/server-github
+claude mcp add --transport http github https://api.githubcopilot.com/mcp/ --header "Authorization: Bearer YOUR_GITHUB_PAT"
 
 # 演習 2: MCP 統合をテスト
 # Claude Code で: /mcp__github__list_prs
@@ -371,7 +370,7 @@ cp 04-subagents/*.md .claude/agents/
 ✅ バックグラウンドタスク管理
 ✅ 学習済み設定のための Auto Memory
 ✅ バックグラウンド安全性分類器付きの Auto Mode
-✅ 構造化マルチセッションワークフロー向けチャンネル
+✅ 実行中のセッションにイベント（CI 結果、チャットメッセージ、Webhook）をプッシュするチャンネル
 ✅ ハンズフリー操作のための音声入力
 ✅ リモート操作、デスクトップアプリ、Web セッション
 ✅ マルチエージェント協調のための Agent Teams
@@ -407,10 +406,10 @@ export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
 
 # 演習 7: スケジュールタスク
 /loop 5m /check-status
-# あるいは永続的なスケジュールタスクには CronCreate を使う
+# タスクはセッション単位。永続的なスケジュールには Routines または Desktop のスケジュールタスクを使う
 
-# 演習 8: マルチセッションワークフローのチャンネル
-# セッションをまたぐ作業をチャンネルで整理する
+# 演習 8: チャンネル（リサーチプレビュー）
+# チャンネルは実行中のセッションにイベントをプッシュする MCP サーバである
 
 # 演習 9: 音声入力
 # ハンズフリーで Claude Code とやり取りするため音声入力を使う
@@ -422,7 +421,7 @@ export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
 - [ ] Alt+T / Option+T で拡張思考を切り替えた
 - [ ] バックグラウンド安全性分類器付き auto モードを使った
 - [ ] 長時間処理でバックグラウンドタスクを使った
-- [ ] マルチセッションワークフローのためチャンネルを試した
+- [ ] 外部イベントをセッションにプッシュするチャンネルを試した
 - [ ] ハンズフリー入力のため音声入力を試した
 - [ ] リモート操作、デスクトップアプリ、Web セッションを理解している
 - [ ] 協調作業のため Agent Teams を有効化して使った
@@ -453,7 +452,7 @@ export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
 
 ```bash
 # 演習 1: 完全プラグインをインストール
-# Claude Code で: /plugin install pr-review
+claude --plugin-dir ./07-plugins/pr-review  # リポジトリのルートから
 
 # 演習 2: CI/CD のための印字モード
 claude -p "Run all tests and generate report"
@@ -699,13 +698,13 @@ done
 
 1. **チームドキュメントを作成** — チームの Claude Code セットアップを文書化
 2. **カスタムプラグインを構築** — チームのワークフローをパッケージ化
-3. **リモートコントロールを試す** — 外部ツールから Claude Code セッションをプログラムで制御
+3. **リモートコントロールを試す** — ローカルの Claude Code セッションをスマートフォン、ブラウザ、または Claude アプリから継続
 4. **Web セッションを試す** — リモート開発のためブラウザベースインターフェースで Claude Code を使う
 5. **デスクトップアプリを使う** — ネイティブデスクトップアプリで Claude Code 機能を利用
 6. **Auto Mode を使う** — バックグラウンド安全性分類器付きで Claude を自律的に動かす
 7. **Auto Memory を活用** — Claude に好みを時間とともに自動学習させる
 8. **Agent Teams をセットアップ** — 複雑で多面的なタスクで複数エージェントを協調させる
-9. **チャンネルを使う** — 構造化マルチセッションワークフローで作業を整理
+9. **チャンネルを使う** — 実行中のセッションにイベント（CI 結果、チャットメッセージ、Webhook）をプッシュする MCP サーバを接続
 10. **音声入力を試す** — ハンズフリー音声入力で Claude Code とやり取りする
 11. **スケジュールタスクを使う** — `/loop` や cron ツールで反復チェックを自動化
 12. **例をコントリビュート** — コミュニティと共有する
@@ -739,13 +738,19 @@ done
 
 ---
 
-**最終更新**：2026 年 10 月 15 日
-**Claude Code バージョン**：2.1.300
+**最終更新**：2026 年 10 月 18 日
+**Claude Code バージョン**：2.1.302
 **情報源**：
 - https://code.claude.com/docs/en/overview
 - https://code.claude.com/docs/en/hooks
 - https://github.com/anthropics/claude-code/releases/tag/v2.1.119
 - https://code.claude.com/docs/en/agent-teams
+- https://code.claude.com/docs/en/mcp
+- https://code.claude.com/docs/en/plugins/install
+- https://code.claude.com/docs/en/channels
+- https://code.claude.com/docs/en/remote-control
+- https://code.claude.com/docs/en/scheduled-tasks
+- https://code.claude.com/docs/en/commands
 - https://code.claude.com/docs/en/sub-agents
 **互換モデル**：Claude Fable 5、Claude Opus 5、Claude Sonnet 5、Claude Sonnet 4.6、Claude Opus 4.8、Claude Haiku 4.5
 **メンテナンス**：Claude How-To Contributors

@@ -564,7 +564,7 @@ graph TB
 
 ### Claude Code のメモリ階層（7 層）
 
-Claude Code は 7 層からメモリを読み込む。優先度の高い順に：
+Claude Code は 7 層からメモリを読み込む。CLAUDE.md ファイルは互いに上書きせずコンテキストに連結され、managed → user → project → local の順に読み込まれる（より具体的なファイルほど後に読まれる）：
 
 ```mermaid
 graph TD
@@ -594,7 +594,7 @@ graph TD
 | 4. User | `~/.claude/CLAUDE.md` | 個人 | 中 | 個人 | 個人の好み |
 | 5. User Rules | `~/.claude/rules/*.md` | 個人 | 中 | 個人 | 個人ルールのモジュール化 |
 | 6. Local | `./CLAUDE.local.md` | ローカル | 低 | 共有しない | マシン固有設定 |
-| 7. Auto Memory | 自動 | セッション | 最低 | 個人 | 学習された好み・パターン |
+| 7. Auto Memory | 自動 | リポジトリ単位 | 最低 | 個人 | 学習された好み・パターン |
 
 ### Auto Memory
 
@@ -1309,15 +1309,15 @@ graph TB
 
 ### 同梱スキル
 
-Claude Code には標準で 5 つの同梱スキルが含まれる：
+Claude Code には標準で 20 の同梱スキルが含まれる：
 
 | スキル | コマンド | 用途 |
 |-------|---------|---------|
 | **Simplify** | `/simplify` | 複雑なコードや説明を単純化 |
 | **Batch** | `/batch` | 複数ファイル・項目に対する一括操作 |
-| **Debug** | `/debug` | 根本原因分析を伴う体系的デバッグ |
+| **Debug** | `/debug` | 現在のセッションのデバッグログを有効にし、そのログを読んで問題を調査 |
 | **Loop** | `/loop` | タイマーで定期実行 |
-| **Claude API** | `/claude-api` | Anthropic API への直接アクセス |
+| **Claude API** | `/claude-api` | プロジェクトの言語向けに Claude API と Managed Agents のリファレンスを読み込む。コードが `anthropic` または `@anthropic-ai/sdk` をインポートすると自動で有効化 |
 
 これらの同梱スキルは常に利用可能であり、インストールや設定は不要である。
 
@@ -2197,7 +2197,7 @@ sequenceDiagram
     participant Hooks
     participant Tools as Configured Tools
 
-    User->>Claude: /plugin install pr-review
+    User->>Claude: claude --plugin-dir ./07-plugins/pr-review
     Claude->>Plugin: Download plugin manifest
     Plugin-->>Claude: Return plugin definition
     Claude->>Install: Extract components
@@ -2223,39 +2223,14 @@ sequenceDiagram
 
 ### プラグイン定義の構造
 
-```yaml
----
-name: plugin-name
-version: "1.0.0"
-description: "What this plugin does"
-author: "Your Name"
-license: MIT
+マニフェストは `.claude-plugin/plugin.json` に置く JSON である。必須は `name` のみで、認識されないトップレベルキーは除去される：
 
-# プラグインのメタデータ
-tags:
-  - category
-  - use-case
-
-# 要件
-requires:
-  - claude-code: ">=1.0.0"
-
-# 同梱コンポーネント
-components:
-  - type: commands
-    path: commands/
-  - type: agents
-    path: agents/
-  - type: mcp
-    path: mcp/
-  - type: hooks
-    path: hooks/
-
-# 設定
-config:
-  auto_load: true
-  enabled_by_default: true
----
+```json
+{
+  "name": "plugin-name",
+  "version": "1.0.0",
+  "description": "What this plugin does"
+}
 ```
 
 ### プラグインのディレクトリ構造
@@ -2273,11 +2248,13 @@ my-plugin/
 │   ├── specialist-2.md
 │   └── configs/
 ├── skills/
-│   ├── skill-1.md
-│   └── skill-2.md
+│   └── skill-name/
+│       └── SKILL.md
 ├── hooks/
 │   └── hooks.json
 ├── .mcp.json
+├── bin/
+│   └── my-tool
 ├── .lsp.json
 ├── settings.json
 ├── templates/
@@ -2350,7 +2327,7 @@ Specializes in finding security vulnerabilities:
 **インストール：**
 
 ```bash
-/plugin install pr-review
+claude --plugin-dir ./07-plugins/pr-review
 
 # 結果：
 # ✅ 3 slash commands installed
@@ -2505,7 +2482,7 @@ graph TD
 1. すべてのコンポーネントを含むプラグイン構造を作る
 2. `.claude-plugin/plugin.json` マニフェストを記述する
 3. ドキュメント付きの `README.md` を作る
-4. `/plugin install ./my-plugin` でローカルテスト
+4. `claude --plugin-dir ./my-plugin` でローカルテスト
 5. プラグインマーケットプレイスへ提出する
 6. レビューを受けて承認される
 7. マーケットプレイスで公開される
@@ -2527,7 +2504,7 @@ Complete PR review workflow with security, testing, and documentation checks.
 
 ## Installation
 ```bash
-/plugin install pr-review
+claude --plugin-dir ./07-plugins/pr-review
 ```
 
 ## Features
@@ -2562,7 +2539,7 @@ Complete PR review workflow with security, testing, and documentation checks.
 
 **プラグイン利用（2 分）：**
 ```bash
-/plugin install pr-review
+claude --plugin-dir ./07-plugins/pr-review
 # ✅ すべてインストール・設定完了
 # ✅ 即座に使える
 # ✅ チームでも完全に同じ環境を再現可能
@@ -2815,13 +2792,13 @@ Claude Code は 5 種類（command、http、mcp_tool、prompt、agent）にわ�
 | フックイベント | トリガー | ユースケース |
 |------------|---------|-----------|
 | **SessionStart** | セッション開始 / 再開 / クリア / 圧縮時 | 環境構築、初期化 |
-| **Setup** | 初期環境セットアップ（セッションごとに 1 回） | ツール準備、依存関係インストール |
+| **Setup** | `--init-only` で起動したとき、または `-p` と `--init` / `--maintenance` を併用したとき（通常の起動では発火しない） | ツール準備、依存関係インストール |
 | **InstructionsLoaded** | CLAUDE.md やルールファイル読み込み時 | 検証、変換、補強 |
 | **UserPromptSubmit** | ユーザーがプロンプト送信時 | 入力検証、プロンプトフィルタ |
 | **UserPromptExpansion** | 入力したスラッシュコマンド（スキル、カスタムコマンド、MCP プロンプト）がプロンプトに展開される。展開をブロック可能 | 直接の `/command` 使用のブロック・記録、スキルごとのコンテキスト追加 |
 | **PreToolUse** | 任意のツール実行前 | 検証、承認ゲート、ログ |
 | **PermissionRequest** | 権限ダイアログ表示時 | 自動承認・拒否フロー |
-| **PermissionDenied** | ユーザーが権限要求を拒否 | ログ、分析、ポリシー適用 |
+| **PermissionDenied** | auto モードがツール呼び出しを拒否したとき（手動での拒否では発火しない） | ログ、分析、ポリシー適用 |
 | **PostToolUse** | ツール成功後 | 自動整形、通知、後処理 |
 | **PostToolUseFailure** | ツール実行失敗時 | エラー処理、ログ |
 | **PostToolBatch** | ツール実行バッチの完了後 | 集約レポート、バッチ検証 |
@@ -2842,7 +2819,7 @@ Claude Code は 5 種類（command、http、mcp_tool、prompt、agent）にわ�
 | **PostCompact** | 圧縮完了後 | 圧縮後の処理 |
 | **PreModelSwitch** | モデル切り替えが適用される直前 | モデル変更のゲート・拒否 |
 | **PostModelSwitch** | セッションのモデルが変更された後 | モデル変更のログ・連動 |
-| **WorktreeCreate** | ワークツリー作成時 | 環境構築、依存関係インストール |
+| **WorktreeCreate** | ワークツリー作成時 | デフォルトの git ワークツリー作成を置き換える。ワークツリーのパスを出力する必要がある |
 | **WorktreeRemove** | ワークツリー削除時 | クリーンアップ、リソース解放 |
 | **Elicitation** | MCP サーバーがユーザー入力を要求時 | 入力検証 |
 | **ElicitationResult** | ユーザーが入力要求に応答時 | 応答処理 |
@@ -2930,12 +2907,13 @@ Esc + Esc
 /rewind
 ```
 
-チェックポイントを選ぶと 5 つのオプションから選択できる：
+チェックポイントを選ぶと 6 つのオプションから選択できる：
 1. **コードと会話を復元** — 両方をその時点へ戻す
 2. **会話を復元** — メッセージを巻き戻し、現在のコードは保つ
 3. **コードを復元** — ファイルを戻し、会話は保つ
 4. **ここから要約** — 会話を要約に圧縮
-5. **キャンセル** — 取り消す
+5. **ここまでを要約** — この時点より前をすべて要約に圧縮
+6. **キャンセル** — 取り消す
 
 ### ユースケース
 
@@ -2948,9 +2926,11 @@ Esc + Esc
 
 ### 設定
 
+チェックポイントはデフォルトで有効であり、`fileCheckpointingEnabled` で制御する：
+
 ```json
 {
-  "autoCheckpoint": true
+  "fileCheckpointingEnabled": true
 }
 ```
 
@@ -2981,12 +2961,11 @@ Esc + Esc
 
 **起動：**
 - セッション中に `Alt+T`（macOS では `Option+T`）でトグル
-- プログラム制御には環境変数 `MAX_THINKING_TOKENS` を設定
+- Opus 4.7 以降、Sonnet 5 以降、Haiku 5.5、Fable は常に適応型推論を使うため、固定の `MAX_THINKING_TOKENS` 予算は適用されない。推論の深さは `/effort` で調整する
 
 ```bash
-# 環境変数で拡張思考を有効化
-export MAX_THINKING_TOKENS=50000
-claude -p "Should we use microservices or monolith?"
+# effort レベルで推論の深さを調整
+/effort high
 ```
 
 **メリット：**
@@ -3017,7 +2996,7 @@ Claude にできることを制御する。
 | **default** | 標準権限。機微な操作はプロンプト | 一般開発 |
 | **acceptEdits** | ファイル編集を確認なく承認 | 信頼できる編集ワークフロー |
 | **plan** | 解析・計画のみ、ファイル変更不可 | コードレビュー、アーキテクチャ計画 |
-| **auto** | 安全な操作は自動承認、リスクのみ確認 | 安全性とのバランス自律性 |
+| **auto** | 分類器が安全な操作を承認し、リスクのある操作をブロック。連続 3 回または合計 20 回ブロックされると確認が戻る | 安全性とのバランス自律性 |
 | **dontAsk** | 確認が必要な操作はすべて自動拒否。事前承認済みツールと読み取りのみ実行 | ロックダウンした CI・スクリプト |
 | **bypassPermissions** | 制限なし、安全チェックなし | CI/CD、信頼できるスクリプト |
 
@@ -3087,13 +3066,7 @@ claude -r "Feature"    # 名前 / ID でセッションを再開
 - `↑ / ↓` — コマンド履歴
 - `Ctrl + L` — 画面クリア
 
-**複数行入力：**
-```bash
-User: \
-> Long complex prompt
-> spanning multiple lines
-> \end
-```
+**複数行入力：** `\` + Enter、Option+Enter（macOS）、Shift+Enter、または Ctrl+J で改行する。`\end` のような終端記号はない。
 
 ### 設定
 
@@ -3101,14 +3074,8 @@ User: \
 
 ```json
 {
-  "planning": {
-    "autoEnter": true,
-    "requireApproval": true
-  },
-  "extendedThinking": {
-    "enabled": true,
-    "showThinkingProcess": true
-  },
+  "alwaysThinkingEnabled": true,
+  "showThinkingSummaries": true,
   "permissions": {
     "defaultMode": "default"
   }
@@ -3149,9 +3116,16 @@ Claude Code は推論努力を調整可能な 3 モデルをサポートする�
 *収録機能：フック、チェックポイント、プラニングモード、拡張思考、バックグラウンドタスク、権限モード（6 種）、ヘッドレスモード、セッション管理、Auto Memory、Agent Teams、定期タスク、Chrome 連携、Channels、音声入力、同梱スキル*
 
 ---
-**最終更新：** 2026 年 10 月 15 日
-**Claude Code バージョン：** 2.1.300
+**最終更新：** 2026 年 10 月 18 日
+**Claude Code バージョン：** 2.1.302
 **出典：**
+- https://code.claude.com/docs/en/plugins/manifest-reference
+- https://code.claude.com/docs/en/plugins/create
+- https://code.claude.com/docs/en/plugins/install
+- https://code.claude.com/docs/en/settings-reference
+- https://code.claude.com/docs/en/interactive-mode
+- https://code.claude.com/docs/en/checkpointing
+- https://code.claude.com/docs/en/memory
 - https://code.claude.com/docs/en/tools-reference#task-tool-availability
 - https://code.claude.com/docs/en/overview
 - https://code.claude.com/docs/en/hooks

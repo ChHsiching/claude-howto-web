@@ -70,10 +70,11 @@
 
 | 優先度 | 種類 | 場所 | スコープ |
 |--------|------|------|---------|
-| 1（最高） | **CLI 定義** | `--agents` フラグ経由（JSON） | セッションのみ |
-| 2 | **プロジェクトサブエージェント** | `.claude/agents/` | 現在のプロジェクト |
-| 3 | **ユーザーサブエージェント** | `~/.claude/agents/` | 全プロジェクト |
-| 4（最低） | **プラグインエージェント** | プラグインの `agents/` ディレクトリ | プラグイン経由 |
+| 1（最高） | **マネージド** | マネージド設定 | 組織全体 |
+| 2 | **CLI 定義** | `--agents` フラグ経由（JSON） | セッションのみ |
+| 3 | **プロジェクトサブエージェント** | `.claude/agents/` | 現在のプロジェクト |
+| 4 | **ユーザーサブエージェント** | `~/.claude/agents/` | 全プロジェクト |
+| 5（最低） | **プラグインエージェント** | プラグインの `agents/` ディレクトリ | プラグイン経由 |
 
 同名が複数存在する場合、優先度の高いソースが優先される。
 
@@ -119,7 +120,7 @@ hooks:  # オプション — コンポーネントスコープのフック
 |-----------|-----|------|
 | `name` | はい | 一意な識別子（小文字とハイフン） |
 | `description` | はい | 用途の自然言語による説明。"use PROACTIVELY" を含めると自動呼び出しが促進される |
-| `tools` | いいえ | 特定ツールのカンマ区切りリスト。省略するとすべてのツールを継承。`Agent(agent_name)` 構文で生成可能なサブエージェントを制限できる。MCP：`mcp__<server>__*` でサーバー全体を許可（v2.1.299+：その正確なサーバー名のみに一致） |
+| `tools` | いいえ | 特定ツールのカンマ区切りリスト。省略するとすべてのツールを継承。`Agent(agent_name)` 構文で生成可能なサブエージェントを制限できる（`claude --agent` でメインスレッドとして実行する場合のみ。サブエージェント内では型リストは無視される）。MCP：`mcp__<server>__*` でサーバー全体を許可（v2.1.299+：その正確なサーバー名のみに一致） |
 | `disallowedTools` | いいえ | サブエージェントが使用してはならないツールのカンマ区切りリスト |
 | `model` | いいえ | 使用モデル：`sonnet`、`opus`、`haiku`、フルモデル ID、または `inherit`。デフォルトは設定済みのサブエージェントモデル |
 | `permissionMode` | いいえ | `default`（Manual モード。v2.1.200 以降 `manual` もエイリアスとして有効）、`acceptEdits`、`dontAsk`、`bypassPermissions`、`plan`、`auto`。親が `bypassPermissions`、`acceptEdits`、`auto` で動作している場合、サブエージェントの `permissionMode` は無視される |
@@ -156,7 +157,9 @@ mcpServers:
     url: https://mcp.notion.com/mcp
   github:
     type: http
-    url: https://api.github.com/mcp
+    url: https://api.githubcopilot.com/mcp/
+    headers:
+      Authorization: "Bearer ${GITHUB_PERSONAL_ACCESS_TOKEN}"
 tools: Read, Grep, Glob
 ---
 
@@ -236,12 +239,13 @@ claude --agents '{
 
 エージェント定義は次の優先順位でロードされる（最初に一致したものが優先）：
 
-1. **CLI 定義** — `--agents` フラグ（セッションのみ、JSON）
-2. **プロジェクトレベル** — `.claude/agents/`（現在のプロジェクト）
-3. **ユーザーレベル** — `~/.claude/agents/`（すべてのプロジェクト）
-4. **プラグインレベル** — プラグインの `agents/` ディレクトリ
+1. **マネージド** — マネージド設定（組織全体）
+2. **CLI 定義** — `--agents` フラグ（セッションのみ、JSON）
+3. **プロジェクトレベル** — `.claude/agents/`（現在のプロジェクト）
+4. **ユーザーレベル** — `~/.claude/agents/`（すべてのプロジェクト）
+5. **プラグインレベル** — プラグインの `agents/` ディレクトリ
 
-これにより、CLI 定義が単一セッションにおいて他のすべてのソースを上書きできる。
+これにより、CLI 定義が単一セッションにおいてプロジェクト・ユーザー・プラグインの定義を上書きできる。ただし、マネージド定義は引き続き優先される。
 
 ---
 
@@ -475,6 +479,7 @@ claude --agent code-reviewer
 ```yaml
 ---
 name: researcher
+description: Research assistant that keeps findings in persistent memory across sessions
 memory: user
 ---
 
@@ -571,35 +576,42 @@ graph TB
 
 ## フォークサブエージェント
 
-フォークサブエージェント（`context: fork`）は、フォーク時点の親エージェントの会話コンテキスト全体を継承し、クリーンスレートではなくその状態から開始する。これは、これまでの作業を失わずに代替案を探索する場合に有用である。
+フォークサブエージェントは、フォーク時点の親の会話全体（システムプロンプト、ツール、モデル、メッセージ履歴、プロンプトキャッシュ）を継承し、クリーンスレートではなくその状態から開始する。これは、これまでの作業を失わずに代替案を探索する場合に有用である。
 
-> **可用性**：v2.1.117 で GA。**v2.1.232 以降、フォークモードは対話セッションではデフォルトで有効**であり、これはファーストパーティかどうかを問わずすべてのビルドに当てはまる。非対話モード（`claude -p`）と Agent SDK ではデフォルト無効のままである。デフォルト無効の環境で有効化する場合、または v2.1.232 より古い Claude Code では、`CLAUDE_CODE_FORK_SUBAGENT=1` を設定する。
+> **可用性**：v2.1.117 で GA。**v2.1.232 以降、フォークモードは対話セッションではデフォルトで有効**であり、これはファーストパーティかどうかを問わずすべてのビルドに当てはまる。v2.1.302 以降は、非対話モード（`claude -p`）、Agent SDK、デスクトップアプリ、VS Code でもデフォルトで有効である。`claude mcp serve` はフォークサブエージェントを提供しない。デフォルト無効の環境で有効化する場合、または v2.1.232 より古い Claude Code では、`CLAUDE_CODE_FORK_SUBAGENT=1` を設定する。
 
 ### 設定
 
-```yaml
----
-name: alternative-explorer
-description: Explore an alternative implementation path while preserving parent context
-context: fork
-tools: Read, Edit, Bash, Grep, Glob
----
+フォークはエージェントファイルでは定義しない。Claude が Agent ツールで `subagent_type: "fork"` を指定して開始するか、ユーザーが `/subtask <task>`（v2.1.212+）で開始する：
 
-You are a forked subagent. You inherit the parent's full conversation and
-may explore an alternative approach. Return your findings and the parent
-will decide whether to adopt them.
+```text
+/subtask Explore an alternative implementation path and report the trade-offs
 ```
+
+フォークはさらにフォークを生成できない。フォークをブロックするには、拒否ルール `Agent(fork)` を追加する：
+
+```json
+{
+  "permissions": {
+    "deny": ["Agent(fork)"]
+  }
+}
+```
+
+> **注意**：`context: fork` は**スキル**のフロントマターフィールドであり（[スキル](../03-skills/README.md)を参照）、サブエージェントのフィールドではない。Claude Code はエージェント定義内の未知のフィールドを警告なしに無視する。
 
 ### 外部ビルドでの有効化
 
+`CLAUDE_CODE_FORK_SUBAGENT=0` を設定すると、すべての環境でフォークモードを無効にできる。v2.1.302 より前のバージョンでは、`claude -p` と Agent SDK でフォークを有効にするために `1` を設定する。
+
 ```bash
-export CLAUDE_CODE_FORK_SUBAGENT=1
+export CLAUDE_CODE_FORK_SUBAGENT=0
 claude
 ```
 
 ### Fork とクリーンコンテキストの使い分け
 
-| シナリオ | `context: fork` | クリーンコンテキスト（デフォルト） |
+| シナリオ | フォーク（`subagent_type: "fork"`） | クリーンコンテキスト（デフォルト） |
 |---------|-----------------|-------------------------|
 | 代替実装の探索 | はい | いいえ（コンテキストを失う） |
 | 既存コンテキストを伴う長期調査 | はい | いいえ |
@@ -610,7 +622,7 @@ claude
 
 ## 生成可能なサブエージェントの制限
 
-`tools` フィールドで `Agent(agent_type)` 構文を使うと、特定のサブエージェントが生成できるサブエージェントを制御できる。これは委譲対象の特定サブエージェントを許可リスト化する手段を提供する。
+`tools` フィールドで `Agent(agent_type)` 構文を使うと、`claude --agent` でメインスレッドとして実行されるエージェントが生成できるサブエージェントを制御できる。これは委譲対象の特定サブエージェントを許可リスト化する手段を提供する。サブエージェント定義では、括弧内の型リストは無視される。
 
 > **注**：v2.1.63 で `Task` ツールは `Agent` にリネームされた。既存の `Task(...)` 参照は引き続きエイリアスとして機能する。
 
@@ -627,7 +639,7 @@ You are a coordinator agent. You can delegate work to the "worker" and
 "researcher" subagents only. Use Read and Bash for your own exploration.
 ```
 
-この例では、`coordinator` サブエージェントは `worker` と `researcher` サブエージェントのみ生成できる。他のサブエージェントが定義されていても、それらを生成することはできない。
+この例では、`claude --agent coordinator` で実行すると、メインスレッドは `worker` と `researcher` サブエージェントのみ生成できる。他のサブエージェントが定義されていても、それらを生成することはできない。`coordinator` がサブエージェントとして実行される場合、型リストは無視される。
 
 ---
 
@@ -718,7 +730,7 @@ claude --teammate-mode tmux
 
 ### ナビゲーション
 
-`Shift+Down` で分割ペインモード内のチームメイト間を移動できる。
+チームメイト間を移動するには、エージェントパネルで上下矢印キーを使って選択し Enter を押す（インプロセスモード）か、チームメイトのペインをクリックする（分割ペインモード）。
 
 ### チーム設定
 
@@ -898,7 +910,7 @@ graph TB
 ### 主要な動作
 
 - **入れ子生成なし** — サブエージェントは他のサブエージェントを生成できない
-- **バックグラウンド権限** — バックグラウンドサブエージェントは事前承認されていない権限を自動拒否する
+- **バックグラウンド権限** — バックグラウンドサブエージェントが事前承認されていない権限を必要とすると、メインセッションに権限プロンプトが表示され、要求しているサブエージェント名が示される
 - **バックグラウンド化** — `Ctrl+B` で現在実行中のタスクをバックグラウンド化
 - **トランスクリプト** — サブエージェントのトランスクリプトは `~/.claude/projects/{project}/{sessionId}/subagents/agent-{agentId}.jsonl` に保存される
 - **自動圧縮** — サブエージェントのコンテキストは容量約 95% で自動圧縮される（`CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` 環境変数で上書き可能）
@@ -1258,8 +1270,8 @@ graph TD
 
 ---
 
-**最終更新**：2026 年 10 月 15 日
-**Claude Code バージョン**：2.1.300
+**最終更新**：2026 年 10 月 18 日
+**Claude Code バージョン**：2.1.302
 **ソース**：
 
 - https://code.claude.com/docs/en/sub-agents
@@ -1273,5 +1285,7 @@ graph TD
 - https://code.claude.com/docs/en/agent-view
 - https://code.claude.com/docs/en/sub-agents#permission-modes
 - https://code.claude.com/docs/en/sub-agents#available-tools
+- https://code.claude.com/docs/en/mcp
+- https://code.claude.com/docs/en/changelog#2-1-302
 
 **互換モデル**：Claude Sonnet 4.6、Claude Opus 4.7、Claude Haiku 4.5

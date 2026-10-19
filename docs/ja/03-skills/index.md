@@ -136,7 +136,7 @@ Show concrete examples of using this Skill.
 
 ### 推奨フィールド
 
-- **description**（推奨）: スキルが何をするかと、いつ使うか。省略した場合、Claude Code は markdown 本文の最初の段落を使用する。`description` と `when_to_use` を合わせたテキストはスキル一覧で **1,536 文字**で切り詰められる（`skillListingMaxDescChars` で変更可能）。Claude がスキルを発火させるべきタイミングを判断する際に照合するのはこのテキストである。
+- **description**（推奨）: スキルが何をするかと、いつ使うか。省略した場合、Claude Code は markdown 本文の最初の空でない行を使用する。`description` と `when_to_use` を合わせたテキストはスキル一覧で **1,536 文字**で切り詰められる（`skillListingMaxDescChars` で変更可能）。Claude がスキルを発火させるべきタイミングを判断する際に照合するのはこのテキストである。
 - **name**（任意）: 既定ではスキルの**ディレクトリ名**が使われる。指定した場合は表示名となり、小文字・数字・ハイフンのみ（最大 64 文字）が推奨される移植性のある形式である（claude.ai と Skills API では必須）。Claude Code 自体（v2.1.299+）は、名前に不可視文字・文字方向を変える文字・空白に見える文字、`<` や `>` を含むか、256 文字を超えるスキルやコマンドを、名前を変更するまでスキップする。Claude Code では `anthropic-skills` と `synced` が予約されており、プラグイン外では読み込まれない。"anthropic" や "claude" を含められないというより厳しい制限は、claude.ai や Skills API にアップロードするスキルに適用される。プラグインのスキルでは、`name` はコマンドの最後のセグメントも決定する。
 
 SKILL.md のフロントマターのフィールドはすべて任意であり、推奨されるのは `description` だけである。
@@ -756,7 +756,7 @@ Claude が期待通りにスキルを使わない場合:
 }
 ```
 
-`disableSkillShellExecution` が `true` のとき、スキル内の `` !`command` `` マーカーは実行されずリテラル文字列として残される。スキル自体を無効化することなく、スキルレベルのシェルインジェクション攻撃面を取り除ける。多層防御のため、`allowedTools` 許可リストとの組み合わせを検討するとよい。
+`disableSkillShellExecution` が `true` のとき、スキル内の各 `` !`command` `` マーカーは実行されず、`[shell command execution disabled by policy]` に置き換えられる。スキル自体を無効化することなく、スキルレベルのシェルインジェクション攻撃面を取り除ける。多層防御のため、`allowedTools` 許可リストとの組み合わせを検討するとよい。
 
 ## スキルと他機能の比較
 
@@ -778,7 +778,7 @@ Claude Code には、インストール不要で常時利用できる組み込�
 | `/simplify` | 変更ファイルを再利用性、品質、効率の観点でレビューする。3 つの並列レビューエージェントを起動 |
 | `/batch <instruction>` | git worktree を用いてコードベース全体に大規模な並列変更をオーケストレーション |
 | `/debug [description]` | デバッグログを読んで現在のセッションをトラブルシュート |
-| `/loop [interval] <prompt>` | プロンプトを定期的に繰り返し実行（例: `/loop 5m check the deploy`） |
+| `/loop [interval] [prompt]` | プロンプトを定期的に繰り返し実行（例: `/loop 5m check the deploy`） |
 | `/claude-api` | Claude API/SDK リファレンスをロード。`anthropic`/`@anthropic-ai/sdk` のインポート時に自動発火 |
 
 これらのスキルは追加インストールや設定なしでそのまま使える。カスタムスキルと同じ SKILL.md 形式に従う。
@@ -825,8 +825,8 @@ chmod +x ~/.claude/skills/my-skill/scripts/*.py
 - [フックガイド](../06-hooks/) - イベント駆動の自動化
 
 ---
-**最終更新**: 2026 年 10 月 15 日
-**Claude Code バージョン**: 2.1.300
+**最終更新**: 2026 年 10 月 18 日
+**Claude Code バージョン**: 2.1.302
 **情報源**:
 - https://code.claude.com/docs/en/skills
 - https://code.claude.com/docs/en/settings
@@ -839,4 +839,5 @@ chmod +x ~/.claude/skills/my-skill/scripts/*.py
 - https://code.claude.com/docs/en/skills#pre-approve-tools-for-a-skill
 - https://code.claude.com/docs/en/memory#write-effective-instructions
 - https://code.claude.com/docs/en/memory
+- https://code.claude.com/docs/en/commands
 **対応モデル**: Claude Fable 5, Claude Opus 5, Claude Sonnet 5, Claude Sonnet 4.6, Claude Opus 4.8, Claude Haiku 4.5

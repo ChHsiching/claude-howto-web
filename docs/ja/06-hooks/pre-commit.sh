@@ -8,6 +8,13 @@
 # それ以外の非ゼロ値は「ブロックしないエラー」であり、コミットはそのまま続行してしまう。
 # 出典：https://code.claude.com/docs/en/hooks
 
+# 標準入力からフックの JSON を読み取り、git commit コマンドのときだけテストを実行する
+INPUT=$(cat)
+COMMAND=$(echo "$INPUT" | sed -n 's/.*"command"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)
+if ! echo "$COMMAND" | grep -q 'git commit'; then
+  exit 0
+fi
+
 echo "🧪 コミット前にテストを実行しています..."
 
 # package.json の有無を確認（Node.js プロジェクト）

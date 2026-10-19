@@ -37,13 +37,13 @@
 | `/cost` | `/usage` のタイピング用エイリアス — コストタブを開く（v2.1.118+） |
 | `/desktop` | Desktop アプリで継続（エイリアス: `/app`） |
 | `/diff` | 未コミット変更のインタラクティブ差分ビューア |
-| `/doctor` | インストール状態を診断 — Claude が応答中でも開ける。ステータスアイコンを表示。`f` で問題を自動修正（v2.1.116 で強化） |
+| `/doctor` | インストール状態を診断 — Claude が応答中でも開ける。バンドルスキルであり、Claude がセットアップを点検して修正を提案し、確認後に適用する（読み取り専用の診断は `claude doctor`） |
 | `/effort [low\|medium\|high\|xhigh\|max\|auto]` | 矢印キーのスライダーで思考量を設定。レベル: `low` → `medium` → `high` → `xhigh`（v2.1.111 で追加）→ `max`。Opus 4.7 のデフォルトは `xhigh`、`max` は Opus 4.7 が必要 |
 | `/exit` | REPL を終了（エイリアス: `/quit`） |
 | `/export [filename]` | 現在の会話をファイルまたはクリップボードにエクスポート |
 | `/extra-usage` | レート制限の追加使用量を設定 |
 | `/fast [on\|off]` | 高速モードを切り替え |
-| `/feedback` | フィードバックを送信（エイリアス: `/bug`） |
+| `/feedback` | フィードバックを送信 |
 | `/focus` | フォーカスビューを切り替え（v2.1.110 で追加。フォーカス切替は `Ctrl+O` から本コマンドへ移行） |
 | `/help` | ヘルプを表示 |
 | `/hooks` | フック設定を表示 |
@@ -86,10 +86,10 @@
 | `/status` | バージョン、モデル、アカウントを表示 |
 | `/statusline` | ステータスラインを設定 |
 | `/tasks` | バックグラウンドタスクを一覧／管理 |
-| `/team-onboarding` | プロジェクトの Claude Code 設定からチームメイト向けランプアップガイドを生成（v2.1.101 で新規） |
+| `/team-onboarding` | 過去 30 日間の Claude Code のセッション、コマンド、MCP 利用状況からチームメイト向けランプアップガイドを生成し、共有リンクを返す（v2.1.101 で新規） |
 | `/terminal-setup` | ターミナルのキーバインドを設定 |
 | `/theme` | テーマピッカーを開く／カスタムテーマを管理（v2.1.118）。カスタムテーマは `~/.claude/themes/<name>.json` に JSON で定義 |
-| `/tui` | ちらつきのないフルスクリーン TUI（テキストユーザーインターフェース）モードを切り替え（v2.1.110 で追加） |
+| `/tui [default\|fullscreen]` | ターミナル UI のレンダラーを設定して再起動する（`fullscreen` でちらつきのない描画）。引数なしの `/tui` は現在のレンダラーを表示（v2.1.110 で追加） |
 | `/ultrareview` | マルチエージェント分析による包括的なクラウドベースのコードレビュー（v2.1.111 で追加）。現在の推奨呼び出しは `/code-review ultra` で、`/ultrareview` はそのエイリアスとして残っている。Pro と Max では 3 回まで無料、以降は使用クレジットが必要 |
 | `/upgrade` | 上位プランへのアップグレードページを開く |
 | `/usage` | 正式な使用状況ダッシュボード（v2.1.118）— プラン使用量制限、レート制限、コスト、日次セッション統計を統合。`/cost` と `/stats` は特定のタブを開くタイピング用エイリアス |
@@ -104,7 +104,7 @@
 | `/batch <instruction>` | ワークツリーを使った大規模並列変更をオーケストレートする |
 | `/claude-api` | プロジェクトの言語に応じた Claude API リファレンスを読み込む |
 | `/debug [description]` | デバッグログを有効化 |
-| `/loop [interval] <prompt>` | プロンプトを定期的に繰り返し実行 |
+| `/loop [interval] [prompt]` | プロンプトを定期的に繰り返し実行 |
 | `/simplify [focus]` | 変更されたファイルをコード品質の観点でレビュー |
 
 ### 非推奨コマンド
@@ -147,7 +147,7 @@
 
 > **v2.1.101 で新規追加**
 
-`/team-onboarding` を使うと、プロジェクトのローカルな Claude Code 利用状況からチームメイト向けランプアップガイドを生成できる。コマンドは `CLAUDE.md`、インストール済みのスキル、サブエージェント、フック、最近のワークフローを点検し、新しい開発者がすぐに生産的になれるオンボーディングドキュメントを作成する。
+`/team-onboarding` を使うと、プロジェクトのローカルな Claude Code 利用状況からチームメイト向けランプアップガイドを生成できる。Claude は過去 30 日間のセッション、コマンド、MCP サーバーの利用状況を分析し、新しい開発者がすぐに生産的になれるオンボーディングガイドを作成して、その共有リンクを返す。
 
 組み込みコマンドであり、インストール作業は不要である。
 
@@ -157,13 +157,11 @@
 claude /team-onboarding
 ```
 
-生成されるガイドは次の内容を要約する:
+生成されるガイドは次の情報をもとに作られる:
 
-- [`CLAUDE.md`](../02-memory/README.md) からのプロジェクトの目的と主な慣習
-- 利用可能な [スキル](../03-skills/README.md) と自動起動の条件
-- 設定済みの [サブエージェント](../04-subagents/README.md) とその責務
-- 一般的なイベントで実行される [フック](../06-hooks/README.md)
-- 新規参加者が知っておくべき共通ワークフロー
+- 最近のセッションで繰り返し現れるワークフロー
+- よく実行するコマンド
+- 利用している [MCP サーバー](../05-mcp/README.md)
 
 **提供開始:** Claude Code v2.1.101（2026 年 4 月 11 日）に同梱。
 
@@ -232,7 +230,7 @@ Instructions for Claude to follow when this command is invoked.
 | フィールド | 用途 | デフォルト |
 |----------|------|----------|
 | `name` | コマンド名（`/name` になる） | ディレクトリ名 |
-| `description` | 簡単な説明（Claude がいつ使うか判断する材料） | 最初の段落 |
+| `description` | 簡単な説明（Claude がいつ使うか判断する材料） | 最初の空でない行 |
 | `argument-hint` | 自動補完用の想定引数 | なし |
 | `allowed-tools` | 権限なしで使えるツール | 継承 |
 | `model` | 使用する特定のモデル | 継承 |
@@ -603,8 +601,8 @@ Deploy the application to production:
 
 ---
 
-**最終更新**: 2026 年 10 月 15 日
-**Claude Code バージョン**: 2.1.300
+**最終更新**: 2026 年 10 月 18 日
+**Claude Code バージョン**: 2.1.302
 **Sources**:
 - https://code.claude.com/docs/en/commands
 - https://code.claude.com/docs/en/output-styles
@@ -617,6 +615,9 @@ Deploy the application to production:
 - https://code.claude.com/docs/en/permissions#mcp
 - https://code.claude.com/docs/en/changelog#2-1-299
 - https://code.claude.com/docs/en/hooks#hook-lifecycle
+- https://code.claude.com/docs/en/fullscreen
+- https://code.claude.com/docs/en/model-config
+- https://code.claude.com/docs/en/skills
 **Compatible Models**: Claude Sonnet 4.6, Claude Opus 4.7, Claude Haiku 4.5
 
 *[Claude How To](../) ガイドシリーズの一部*
