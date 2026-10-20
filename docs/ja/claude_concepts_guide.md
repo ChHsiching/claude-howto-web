@@ -1081,46 +1081,7 @@ Reviewers: @bob, @charlie
 - `create_commit` - Create new commit
 ~~~~
 
-#### 例 2：Database MCP の設定
-
-**設定：**
-
-```json
-{
-  "mcpServers": {
-    "database": {
-      "command": "npx",
-      "args": ["@modelcontextprotocol/server-database"],
-      "env": {
-        "DATABASE_URL": "postgresql://user:pass@localhost/mydb"
-      }
-    }
-  }
-}
-```
-
-**利用例：**
-
-```markdown
-User: Fetch all users with more than 10 orders
-
-Claude: I'll query your database to find that information.
-
-# Using MCP database tool:
-SELECT u.*, COUNT(o.id) as order_count
-FROM users u
-LEFT JOIN orders o ON u.id = o.user_id
-GROUP BY u.id
-HAVING COUNT(o.id) > 10
-ORDER BY order_count DESC;
-
-# Results:
-- Alice: 15 orders
-- Bob: 12 orders
-- Charlie: 11 orders
-```
-
-#### 例 3：複数 MCP を組み合わせたワークフロー
+#### 例 2：複数 MCP を組み合わせたワークフロー
 
 **シナリオ：日次レポートの生成**
 
@@ -1167,7 +1128,7 @@ Final Output:
 💰 $12,450 in daily sales
 ```
 
-#### 例 4：Filesystem MCP の操作
+#### 例 3：Filesystem MCP の操作
 
 **設定：**
 

@@ -498,6 +498,44 @@ claude mcp add --transport stdio database -- npx -y @bytebase/dbhub \
   --dsn "$DATABASE_URL"
 ```
 
+> **Warning**: この設定では Claude に書き込み権限が与えられます。DBHub の `execute_sql` ツールは、読み取り専用モードを有効にしない限り、`UPDATE`、`DELETE`、`DROP` を含むあらゆる SQL を実行します。本番環境ではなく、ローカルまたは使い捨てのデータベースを使ってください。
+
+**読み取り専用の設定（推奨）：**
+
+`SELECT` だけを実行できるデータベースユーザーを作成します（PostgreSQL の例）：
+
+```sql
+CREATE ROLE claude_readonly LOGIN PASSWORD 'change-me';
+GRANT CONNECT ON DATABASE mydb TO claude_readonly;
+GRANT USAGE ON SCHEMA public TO claude_readonly;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO claude_readonly;
+```
+
+`dbhub.toml` で読み取り専用モードを有効にします。以前の `--readonly` フラグはもう使えません。DBHub は `${DATABASE_URL}` を環境変数から読み込むため、ファイルに認証情報を書く必要はありません：
+
+```toml
+[[sources]]
+id = "default"
+dsn = "${DATABASE_URL}"
+
+[[tools]]
+name = "execute_sql"
+source = "default"
+readonly = true
+```
+
+`--dsn` の代わりに、このファイルを DBHub に指定します。Claude Code は同じ名前のサーバーを重複して追加できないため、先に上で追加した書き込み可能な `database` サーバーを削除してください：
+
+```bash
+# 上で追加した書き込み可能なサーバーを置き換える
+claude mcp remove database
+export DATABASE_URL="postgresql://claude_readonly:change-me@localhost/mydb"
+claude mcp add --transport stdio database -- npx -y @bytebase/dbhub \
+  --config "$PWD/dbhub.toml"
+```
+
+読み取り専用モードは SQL の文字列をチェックする仕組みで、過去に回避された例があります（DBHub 0.22.6 で修正済み）。データを本当に守るのは `SELECT` 専用ユーザーです。詳しくは [DBHub の読み取り専用モード](https://dbhub.ai/tools/execute-sql#read-only-mode) を参照してください。
+
 ### 例 3：マルチ MCP ワークフロー
 
 **シナリオ：日次レポート生成**

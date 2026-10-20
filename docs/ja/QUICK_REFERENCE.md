@@ -69,7 +69,7 @@ chmod +x ~/.claude/hooks/*.sh
 ### プラグイン
 ```bash
 # 例からインストール (公開済みなら)
-/plugin install pr-review
+claude --plugin-dir ./07-plugins/pr-review
 /plugin install devops-automation
 /plugin install documentation
 ```
@@ -152,7 +152,7 @@ cp -r 03-skills/code-review-specialist ~/.claude/skills/
 # 利用: 自動起動
 
 # 方法 4: プラグイン (推奨)
-/plugin install pr-review
+claude --plugin-dir ./07-plugins/pr-review
 # 利用: /review-pr
 ```
 
@@ -376,7 +376,7 @@ cp -r 03-skills/code-review-specialist ~/.claude/skills/
 ### 第 3 週以降
 ```bash
 # 完全プラグインをインストール
-/plugin install pr-review
+claude --plugin-dir ./07-plugins/pr-review
 
 # バンドル機能を使う
 /review-pr
