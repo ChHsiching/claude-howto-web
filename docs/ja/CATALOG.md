@@ -253,7 +253,7 @@ cp -r 03-skills/* ~/.claude/skills/
 
 | プラグイン | 説明 | 構成要素 | 利用シーン | スコープ | インストール |
 |--------|-------------|------------|-------------|-------|--------------|
-| `pr-review` | PR レビューワークフロー | コマンド 3、エージェント 3、GitHub MCP | コードレビュー | プロジェクト | `/plugin install pr-review` |
+| `pr-review` | PR レビューワークフロー | コマンド 3、エージェント 3、GitHub MCP | コードレビュー | プロジェクト | `claude --plugin-dir ./07-plugins/pr-review` |
 | `devops-automation` | デプロイと監視 | コマンド 4、エージェント 3、K8s MCP | DevOps タスク | プロジェクト | `/plugin install devops-automation` |
 | `documentation` | ドキュメント生成スイート | コマンド 4、エージェント 3、テンプレート | ドキュメント | プロジェクト | `/plugin install documentation` |
 
@@ -510,7 +510,7 @@ cp 02-memory/personal-CLAUDE.md ~/.claude/CLAUDE.md
 | 4. 自動化 | フック | `cp 06-hooks/*.sh ~/.claude/hooks/ && chmod +x ~/.claude/hooks/*.sh` |
 | 5. 外部 | MCP | `claude mcp add github -- npx -y @modelcontextprotocol/server-github` |
 | 6. 高度 | スキル | `cp -r 03-skills/* ~/.claude/skills/` |
-| 7. 完全 | プラグイン | `/plugin install pr-review` |
+| 7. 完全 | プラグイン | `claude --plugin-dir ./07-plugins/pr-review` |
 
 ---
 
